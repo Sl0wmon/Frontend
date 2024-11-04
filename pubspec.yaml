@@ -38,6 +38,8 @@ dependencies:
 
   flutter_chart: ^0.1.6
 
+  http: ^1.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
