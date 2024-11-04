@@ -62,6 +62,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_chart:
+    dependency: "direct main"
+    description:
+      name: flutter_chart
+      sha256: "0779f7e5526a6d2cfb45838bff2cb7c4d72514c1986f020de982ebb3ced6f8b6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.6"
   flutter_lints:
     dependency: "direct dev"
     description:
