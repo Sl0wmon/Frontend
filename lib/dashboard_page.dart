@@ -50,7 +50,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> fetchData() async {
     final url = Uri.parse('http://172.30.104.185:8080/api/dashboard/view');
-    final response = await http.post(url, body: jsonEncode({"userId": "test"}), headers: {"Content-Type": "application/json"});
+    final response = await http.post(url,
+        body: jsonEncode({"userId": "test"}),
+        headers: {"Content-Type": "application/json"});
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -76,21 +78,27 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   String formatTime(List<dynamic> timeData) {
-    int hours = timeData[0];
-    int minutes = timeData[1];
-    int seconds = timeData[2];
+    if (timeData == null || timeData.length < 3) {
+      return '0:00:00 (시:분:초)';
+    }
+    int hours = timeData[0] ?? 0;
+    int minutes = timeData[1] ?? 0;
+    int seconds = timeData[2] ?? 0;
     return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')} (시:분:초)';
   }
 
   double _getAdaptiveFontSize(BuildContext context, double size) {
     final screenSize = MediaQuery.of(context).size;
-    final baseSize = 375.0; // 기준 크기 (예: iPhone 11의 너비)
-    return size * (screenSize.shortestSide / baseSize) * MediaQuery.of(context).textScaleFactor;
+    // 화면 비율에 따라 폰트 사이즈를 조정합니다.
+    final aspectRatio = screenSize.width / screenSize.height;
+    final baseAspectRatio = 375.0 / 667.0; // 기준 비율 (iPhone 11)
+    return size * (aspectRatio / baseAspectRatio) * MediaQuery.of(context).textScaleFactor;
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    // 카드의 가로 세로 비율을 설정합니다.
     final double cardWidth = size.width * 0.4;
     final double cardHeight = size.height * 0.15;
 
@@ -182,7 +190,7 @@ class _DashboardPageState extends State<DashboardPage> {
               _buildCardSingleLine('냉각수 온도', '$coolantTemp °C', cardWidth, cardHeight, isLargeFont: true),
               _buildCardSingleLine('흡기 온도', '$intakeTemp °C', cardWidth, cardHeight, isLargeFont: true),
               _buildCardSingleLine('엔진 부하', '$engineLoad %', cardWidth, cardHeight, isLargeFont: true),
-              _buildCardSingleLine('흡기 압력', '$intakePressure kPa', cardWidth, cardHeight),
+              _buildCardSingleLine('흡기 압력', '$intakePressure kPa', cardWidth, cardHeight, isLargeFont: true),
             ],
           ),
           SizedBox(height: 16),
@@ -208,21 +216,21 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildCardSingleLine(String title, String value, double cardWidth, double cardHeight, {bool isLargeFont = false}) {
-    double numericValue = double.tryParse(value.split(' ')[0]) ?? 0; // 값을 숫자로 변환
     return Container(
       width: cardWidth,
       height: cardHeight,
       decoration: BoxDecoration(
-        color: _getCardColor(title, numericValue.toString(), double.tryParse(speed) ?? 0), // speedValue는 숫자
+        color: _getCardColor(title),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(title, style: TextStyle(fontSize: _getAdaptiveFontSize(context, isLargeFont ? 20 : 16), color: Colors.black54)),
-          SizedBox(height: 8),
-          Text(value, style: TextStyle(fontSize: _getAdaptiveFontSize(context, isLargeFont ? 28 : 24), color: Colors.black)),
-        ],
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(title, style: TextStyle(fontSize: _getAdaptiveFontSize(context, isLargeFont ? 24 : 18))),
+            Text(value, style: TextStyle(fontSize: _getAdaptiveFontSize(context, isLargeFont ? 32 : 22))),
+          ],
+        ),
       ),
     );
   }
@@ -231,42 +239,59 @@ class _DashboardPageState extends State<DashboardPage> {
     List<String> splitValue = value.split(' ');
     String numberPart = splitValue[0];
     String unitPart = splitValue.length > 1 ? splitValue[1] : '';
-
     return Container(
       width: cardWidth,
       height: cardHeight,
       decoration: BoxDecoration(
-        color: _getCardColor(title, value, speedValue),
+        color: _getCardColor(title, speedValue),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(title, style: TextStyle(fontSize: _getAdaptiveFontSize(context, isLargeFont ? 20 : 16), color: Colors.black54)),
-          SizedBox(height: 8),
-          Text(numberPart, style: TextStyle(fontSize: _getAdaptiveFontSize(context, isLargeFont ? 28 : 24), color: Colors.black)),
-          Text(unitPart, style: TextStyle(fontSize: _getAdaptiveFontSize(context, isLargeFont ? 20 : 16), color: Colors.black54)),
-        ],
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(title, style: TextStyle(fontSize: _getAdaptiveFontSize(context, isLargeFont ? 20 : 16), color: Colors.black54)),
+            SizedBox(height: 8),
+            Text(numberPart, style: TextStyle(fontSize: _getAdaptiveFontSize(context, isLargeFont ? 28 : 24), color: Colors.black)),
+            Text(unitPart, style: TextStyle(fontSize: _getAdaptiveFontSize(context, isLargeFont ? 20 : 16), color: Colors.black54)),
+          ],
+        ),
       ),
     );
   }
 
-  Color _getCardColor(String title, String value, double speedValue) {
-    double numericValue = double.tryParse(value) ?? 0;
+  Color _getCardColor(String title, [double speedValue = 0]) {
+    double? coolantTempValue = double.tryParse(coolantTemp);
+    double? intakeTempValue = double.tryParse(intakeTemp);
+    double? engineLoadValue = double.tryParse(engineLoad);
+    double? intakePressureValue = double.tryParse(intakePressure);
+    double? fuelEfficiencyValue = double.tryParse(fuelEfficiency);
+    double? fuelRateValue = double.tryParse(fuelRate);
 
-    // 색상 조건 설정
-    if (title == '냉각수 온도' && (numericValue <= 85 || numericValue >= 105)) {
-      return colorFromHex('#FFBDBE');
-    } else if (title == '흡기 온도' && (numericValue <= 20 || numericValue >= 50)) {
-      return colorFromHex('#FFBDBE');
-    } else if (title == '엔진 부하' && (numericValue <= 20 || numericValue >= 70)) {
-      return colorFromHex('#FFBDBE');
-    } else if (title == '흡기 압력' && (numericValue <= 20 || numericValue >= 80)) {
-      return colorFromHex('#FFBDBE');
-    } else if (title == '순간 연비' && speedValue > 0 && (numericValue <= 10 || numericValue >= 20)) {
-      return colorFromHex('#FFBDBE');
-    } else if (title == '순간 연료 소모량' && speedValue == 0 && (numericValue <= 0.2 || numericValue >= 1.5)) {
-      return colorFromHex('#FFBDBE');
+    if (title == '냉각수 온도' && coolantTempValue != null) {
+      if (coolantTempValue < 85 || coolantTempValue > 105) {
+        return colorFromHex('#FFBDBE');
+      }
+    } else if (title == '흡기 온도' && intakeTempValue != null) {
+      if (intakeTempValue < 20 || intakeTempValue > 50) {
+        return colorFromHex('#FFBDBE');
+      }
+    } else if (title == '엔진 부하' && engineLoadValue != null) {
+      if (engineLoadValue < 20 || engineLoadValue > 70) {
+        return colorFromHex('#FFBDBE');
+      }
+    } else if (title == '흡기 압력' && intakePressureValue != null) {
+      if (intakePressureValue < 20 || intakePressureValue > 80) {
+        return colorFromHex('#FFBDBE');
+      }
+    } else if (title == '순간 연비' && speedValue > 0 && fuelEfficiencyValue != null) {
+      if (fuelEfficiencyValue < 10 || fuelEfficiencyValue > 20) {
+        return colorFromHex('#FFBDBE');
+      }
+    } else if (title == '순간 연료 소모량' && speedValue == 0 && fuelRateValue != null) {
+      if (fuelRateValue < 0.2 || fuelRateValue > 1.5) {
+        return colorFromHex('#FFBDBE');
+      }
     }
     return colorFromHex('#8CD8B4');
   }
