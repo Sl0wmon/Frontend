@@ -84,7 +84,7 @@ class RecordPage extends StatelessWidget {
           DrawerHeader(
             child: Text('사이드 메뉴', style: TextStyle(color: Colors.white, fontSize: 24)),
             decoration: BoxDecoration(
-              color: Colors.teal,
+              color: colorFromHex('#8CD8B4'),
             ),
           ),
           ListTile(
@@ -124,6 +124,13 @@ class RecordPage extends StatelessWidget {
         ],
       ),
     );
+  }
+  Color colorFromHex(String hexColor) {
+    hexColor = hexColor.replaceAll('#', '');
+    if (hexColor.length == 6) {
+      hexColor = 'FF' + hexColor;
+    }
+    return Color(int.parse('0x$hexColor'));
   }
 }
 
