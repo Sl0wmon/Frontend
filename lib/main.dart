@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'record_page.dart';
 import 'dashboard_page.dart';
+import 'login_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.teal,
       ),
-      home: DashboardPage(),
+      home: LoginPage(),
       routes: {
         '/record': (context) => RecordPage(),
         '/dashboard': (context) => DashboardPage(),

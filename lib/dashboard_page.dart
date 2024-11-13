@@ -10,7 +10,6 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  // 데이터 변수
   String speed = '0.0';
   String rpm = '0.0';
   String coolantTemp = '0.0';
@@ -49,7 +48,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> fetchData() async {
-    final url = Uri.parse('http://172.30.104.185:8080/api/dashboard/view');
+    final url = Uri.parse('http://172.27.80.1:8080/api/dashboard/view');
     final response = await http.post(url,
         body: jsonEncode({"userId": "test"}),
         headers: {"Content-Type": "application/json"});
@@ -89,22 +88,26 @@ class _DashboardPageState extends State<DashboardPage> {
 
   double _getAdaptiveFontSize(BuildContext context, double size) {
     final screenSize = MediaQuery.of(context).size;
-    // 화면 비율에 따라 폰트 사이즈를 조정합니다.
     final aspectRatio = screenSize.width / screenSize.height;
-    final baseAspectRatio = 375.0 / 667.0; // 기준 비율 (iPhone 11)
+    final baseAspectRatio = 375.0 / 667.0;
     return size * (aspectRatio / baseAspectRatio) * MediaQuery.of(context).textScaleFactor;
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    // 카드의 가로 세로 비율을 설정합니다.
     final double cardWidth = size.width * 0.4;
     final double cardHeight = size.height * 0.15;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('대시보드', style: TextStyle(fontSize: _getAdaptiveFontSize(context, 20))),
+        title: Text(
+            '대시보드',
+            style: TextStyle(
+                fontSize: _getAdaptiveFontSize(context, 35),
+                fontFamily: 'head'
+            )
+        ),
         leading: Builder(
           builder: (context) => IconButton(
             icon: Icon(Icons.menu),
@@ -131,38 +134,70 @@ class _DashboardPageState extends State<DashboardPage> {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            child: Text('사이드 메뉴', style: TextStyle(color: Colors.white, fontSize: _getAdaptiveFontSize(context, 24))),
+            child: Text(
+                '사이드 메뉴',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: _getAdaptiveFontSize(context, 24),
+                    fontFamily: 'head'
+                )
+            ),
             decoration: BoxDecoration(
               color: colorFromHex('#8CD8B4'),
             ),
           ),
           ListTile(
-            title: Text('대시보드'),
+            title: Text(
+                '대시보드',
+                style: TextStyle(
+                    fontFamily: 'body'
+                )
+            ),
             onTap: () {
               Navigator.pop(context);
             },
           ),
           ListTile(
-            title: Text('급발진 상황 기록'),
+            title: Text(
+                '급발진 상황 기록',
+                style: TextStyle(
+                    fontFamily: 'body'
+                )
+            ),
             onTap: () {
               Navigator.pop(context);
               Navigator.push(context, MaterialPageRoute(builder: (context) => RecordPage()));
             },
           ),
           ListTile(
-            title: Text('차량 부품 교체 주기'),
+            title: Text(
+                '차량 부품 교체 주기',
+                style: TextStyle(
+                    fontFamily: 'body'
+                )
+            ),
             onTap: () {
               Navigator.pop(context);
             },
           ),
           ListTile(
-            title: Text('OBD 진단 가이드'),
+            title: Text(
+                'OBD 진단 가이드',
+                style: TextStyle(
+                    fontFamily: 'body'
+                )
+            ),
             onTap: () {
               Navigator.pop(context);
             },
           ),
           ListTile(
-            title: Text('알림'),
+            title: Text(
+                '알림',
+                style: TextStyle(
+                  fontFamily: 'body'
+                )
+            ),
             onTap: () {
               Navigator.pop(context);
             },
@@ -223,12 +258,29 @@ class _DashboardPageState extends State<DashboardPage> {
         color: _getCardColor(title),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: TextStyle(fontSize: _getAdaptiveFontSize(context, isLargeFont ? 24 : 18))),
-            Text(value, style: TextStyle(fontSize: _getAdaptiveFontSize(context, isLargeFont ? 32 : 22))),
+            Text(
+                title,
+                style: TextStyle(
+                    fontSize: _getAdaptiveFontSize(context, isLargeFont ? 20 : 16),
+                    color: Colors.black54,
+                    fontFamily: 'head'
+                )
+            ),
+            Spacer(),
+            Center(
+              child: Text(
+                  value,
+                  style: TextStyle(
+                      fontSize: _getAdaptiveFontSize(context, isLargeFont ? 34 : 28),
+                      fontFamily: 'body'
+                  )
+              ),
+            ),
           ],
         ),
       ),
@@ -239,6 +291,7 @@ class _DashboardPageState extends State<DashboardPage> {
     List<String> splitValue = value.split(' ');
     String numberPart = splitValue[0];
     String unitPart = splitValue.length > 1 ? splitValue[1] : '';
+
     return Container(
       width: cardWidth,
       height: cardHeight,
@@ -246,14 +299,42 @@ class _DashboardPageState extends State<DashboardPage> {
         color: _getCardColor(title, speedValue),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: TextStyle(fontSize: _getAdaptiveFontSize(context, isLargeFont ? 20 : 16), color: Colors.black54)),
-            SizedBox(height: 8),
-            Text(numberPart, style: TextStyle(fontSize: _getAdaptiveFontSize(context, isLargeFont ? 28 : 24), color: Colors.black)),
-            Text(unitPart, style: TextStyle(fontSize: _getAdaptiveFontSize(context, isLargeFont ? 20 : 16), color: Colors.black54)),
+            Text(
+                title,
+                style: TextStyle(
+                    fontSize: _getAdaptiveFontSize(context, isLargeFont ? 20 : 16),
+                    color: Colors.black54,
+                    fontFamily: 'head'
+                ),
+            ),
+            Spacer(),
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                      numberPart,
+                      style: TextStyle(
+                          fontSize: _getAdaptiveFontSize(context, isLargeFont ? 40 : 30),
+                          color: Colors.black,
+                          fontFamily: 'body'
+                      )
+                  ),
+                  Text(
+                      unitPart,
+                      style: TextStyle(
+                          fontSize: _getAdaptiveFontSize(context, isLargeFont ? 20 : 16),
+                          color: Colors.black54,
+                          fontFamily: 'body'
+                      )
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -261,38 +342,20 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Color _getCardColor(String title, [double speedValue = 0]) {
-    double? coolantTempValue = double.tryParse(coolantTemp);
-    double? intakeTempValue = double.tryParse(intakeTemp);
-    double? engineLoadValue = double.tryParse(engineLoad);
-    double? intakePressureValue = double.tryParse(intakePressure);
-    double? fuelEfficiencyValue = double.tryParse(fuelEfficiency);
-    double? fuelRateValue = double.tryParse(fuelRate);
+    double coolantTempValue = double.tryParse(coolantTemp) ?? 0;
+    double intakeTempValue = double.tryParse(intakeTemp) ?? 0;
+    double engineLoadValue = double.tryParse(engineLoad) ?? 0;
+    double intakePressureValue = double.tryParse(intakePressure) ?? 0;
+    double fuelEfficiencyValue = double.tryParse(fuelEfficiency.split(' ')[0]) ?? 0;
+    double fuelRateValue = double.tryParse(fuelRate.split(' ')[0]) ?? 0;
 
-    if (title == '냉각수 온도' && coolantTempValue != null) {
-      if (coolantTempValue < 85 || coolantTempValue > 105) {
-        return colorFromHex('#FFBDBE');
-      }
-    } else if (title == '흡기 온도' && intakeTempValue != null) {
-      if (intakeTempValue < 20 || intakeTempValue > 50) {
-        return colorFromHex('#FFBDBE');
-      }
-    } else if (title == '엔진 부하' && engineLoadValue != null) {
-      if (engineLoadValue < 20 || engineLoadValue > 70) {
-        return colorFromHex('#FFBDBE');
-      }
-    } else if (title == '흡기 압력' && intakePressureValue != null) {
-      if (intakePressureValue < 20 || intakePressureValue > 80) {
-        return colorFromHex('#FFBDBE');
-      }
-    } else if (title == '순간 연비' && speedValue > 0 && fuelEfficiencyValue != null) {
-      if (fuelEfficiencyValue < 10 || fuelEfficiencyValue > 20) {
-        return colorFromHex('#FFBDBE');
-      }
-    } else if (title == '순간 연료 소모량' && speedValue == 0 && fuelRateValue != null) {
-      if (fuelRateValue < 0.2 || fuelRateValue > 1.5) {
-        return colorFromHex('#FFBDBE');
-      }
-    }
+    if (title == '냉각수 온도' && (coolantTempValue < 85 || coolantTempValue > 105)) return colorFromHex('#FFBDBE');
+    if (title == '흡기 온도' && (intakeTempValue < 20 || intakeTempValue > 50)) return colorFromHex('#FFBDBE');
+    if (title == '엔진 부하' && (engineLoadValue < 20 || engineLoadValue > 70)) return colorFromHex('#FFBDBE');
+    if (title == '흡기 압력' && (intakePressureValue < 20 || intakePressureValue > 80)) return colorFromHex('#FFBDBE');
+    if (title == '순간 연비' && speedValue > 0 && (fuelEfficiencyValue < 10 || fuelEfficiencyValue > 20)) return colorFromHex('#FFBDBE');
+    if (title == '순간 연료 소모량' && speedValue == 0 && (fuelRateValue < 0.2 || fuelRateValue > 1.5)) return colorFromHex('#FFBDBE');
+
     return colorFromHex('#8CD8B4');
   }
 }

@@ -1,6 +1,5 @@
-// lib/LoginPage.dart
-
 import 'package:flutter/material.dart';
+import 'dashboard_page.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -57,6 +56,12 @@ class _LoginPageState extends State<LoginPage> {
                     _formKey.currentState!.save();
                     // 로그인 로직 추가
                     print('이메일: $_email, 비밀번호: $_password');
+
+                    // 로그인 성공 시 DashboardPage로 이동
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => DashboardPage()),
+                    );
                   }
                 },
                 child: Text('로그인'),
