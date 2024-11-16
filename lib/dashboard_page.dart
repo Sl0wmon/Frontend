@@ -48,7 +48,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> fetchData() async {
-    final url = Uri.parse('http://172.27.80.1:8080/api/dashboard/view');
+    final url = Uri.parse('http://172.30.78.141:8080/api/dashboard/view');
     final response = await http.post(url,
         body: jsonEncode({"userId": "test"}),
         headers: {"Content-Type": "application/json"});
