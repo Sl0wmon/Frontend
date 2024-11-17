@@ -1,7 +1,8 @@
 // lib/main.dart
 
 import 'package:flutter/material.dart';
-import 'AddCarInfo.dart';
+import 'addCarInfo.dart';
+import 'myPage.dart';
 import 'record_page.dart';
 import 'dashboard_page.dart';
 import 'login_page.dart';
@@ -18,7 +19,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.teal,
       ),
-      home: AddCarInfoPage(),
+      home: MyPage(),
       routes: {
         '/record': (context) => RecordPage(),
         '/dashboard': (context) => DashboardPage(),
