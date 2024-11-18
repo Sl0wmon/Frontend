@@ -30,7 +30,7 @@ class _MyPageState extends State<MyPage> {
           children: [
             // 경계선
             Container(
-              height: 5.0,
+              height: 7.0,
               color: Color(0xFF8CD8B4), // 경계선 색상
             ),
             Expanded(
