@@ -30,6 +30,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
             style: TextStyle(
               fontSize: 24,
               color: Colors.black, // 아이콘 색상
+              fontFamily: 'body',
             ),
           ),
           onPressed: () {
@@ -38,9 +39,16 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
           splashColor: Colors.transparent, // 클릭 시 물결 효과 제거
           highlightColor: Colors.transparent, // 클릭 시 강조 효과 제거
         ),
-        title: Text('Car Info'),
+        title: Text(
+          '개인페이지', // 타이틀 수정
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontFamily: 'head', // 폰트 스타일 변경
+          ),
+        ),
       ),
-      body: Padding(
+      body:
+      Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
