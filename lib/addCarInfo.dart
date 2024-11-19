@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // 이 줄을 추가하세요
-
+import 'package:flutter/services.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class AddCarInfoPage extends StatefulWidget {
   @override
@@ -9,7 +10,7 @@ class AddCarInfoPage extends StatefulWidget {
 
 class _AddCarInfoPageState extends State<AddCarInfoPage> {
   // 각 DropdownButton의 선택된 값을 저장할 변수들
-  String? selectedGender;
+  String? selectedManufacturer;
   String? selectedCarType;
   String? selectedFuelType;
   String? selectedCarColor;
@@ -19,6 +20,8 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
 
   List<String> carTypeOptions = []; // 차급 옵션 리스트
   List<String> exteriorOptions = []; // 외형 옵션 리스트
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +67,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: DropdownButton<String?>(
-                value: selectedGender,
+                value: selectedManufacturer,
                 hint: Text("선택 1"),
                 isExpanded: true,
                 underline: SizedBox(),
@@ -80,7 +83,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                 }).toList(),
                 onChanged: (value) {
                   setState(() {
-                    selectedGender = value;
+                    selectedManufacturer = value;
                     selectedCarType = null; // 차급 선택 초기화
                     exteriorOptions = []; // 외형 옵션 초기화
                     // 제조사에 따라 차급 옵션 설정
@@ -148,7 +151,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                   setState(() {
                     selectedCarType = value;
                     exteriorOptions = []; // 외형 옵션 초기화
-                    if(selectedGender == '현대') {
+                    if(selectedManufacturer == '현대') {
                       if (selectedCarType == '세단/쿠페/해치백') {
                         exteriorOptions = [
                           'i10','아우라','HB20','엑센트','i20','아반떼','i30','라페스타','쏘나타','그랜저'
@@ -166,7 +169,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                       } else if (selectedCarType == '트럭' ) {
                         exteriorOptions = [ '포터', '쏠라티', '싼타크루즈'];
                       }
-                    } else if (selectedGender == '기아') {
+                    } else if (selectedManufacturer == '기아') {
                       if (selectedCarType == '세단/해치백/왜건') {
                         exteriorOptions = [ 'K3', 'K5', '소나타', '아반떼', 'K7', 'K9'];
                       } else if (selectedCarType == 'SUV') {
@@ -176,7 +179,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                       }else if (selectedCarType == '전기차') {
                         exteriorOptions = ['EV6', '니로 EV'];
                       } else { exteriorOptions = [];}
-                    } else if (selectedGender == 'KGM') {
+                    } else if (selectedManufacturer == 'KGM') {
                       if (selectedCarType == '세단') {
                         exteriorOptions = [ '체어맨', '체어맨 W'];
                       } else if (selectedCarType == 'SUV') {
@@ -188,7 +191,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                       }else if (selectedCarType == '버스') {
                         exteriorOptions = ['DA트럭', '동아 초대형 덤프트럭', '동아 HA/HR버스', '동아 MCI 버스', '에어로버스', 'SY트럭', '트랜스타', '메르세데스-벤츠 21.5톤 초대형 덤프트럭'];
                       } else { exteriorOptions = [];}
-                    } else if (selectedGender == 'gm(쉐보레, 캐딜락, 사브, 뷰익)') {
+                    } else if (selectedManufacturer == 'gm(쉐보레, 캐딜락, 사브, 뷰익)') {
                       if (selectedCarType == '쉐보레') {
                         exteriorOptions = [ '스파크', '볼트 EV', '아베오', '크루즈', '말리부', '임팔라', '카마로', '콜벳', '트랙스 1세대', '볼트 EUV', '이쿼녹스', '캡티바', '올란도'];
                       } else if (selectedCarType == '캐딜락') {
@@ -198,7 +201,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                       }else if (selectedCarType == '뷰익') {
                         exteriorOptions = ['파크 애비뉴'];
                       } else { exteriorOptions = [];}
-                    } else if (selectedGender == '르노코리아') {
+                    } else if (selectedManufacturer == '르노코리아') {
                       if (selectedCarType == '소형') {
                         exteriorOptions = [ '클리오', '캡처', '조에'];
                       } else if (selectedCarType == '세단') {
@@ -210,19 +213,19 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                       }else if (selectedCarType == '전기차') {
                         exteriorOptions = ['트위지'];
                       } else { exteriorOptions = [];}
-                    }else if (selectedGender == '대우') {
+                    }else if (selectedManufacturer == '대우') {
                       if (selectedCarType == '트럭') {
                         exteriorOptions = ['맥쎈', '구쎈', '더쎈', '기쎈','프리마', '차세대트럭'];
                       }else if (selectedCarType == '버스') {
                         exteriorOptions = ['노부스'];
                       } else { exteriorOptions = [];}
-                    }else if (selectedGender == '제네시스') {
+                    }else if (selectedManufacturer == '제네시스') {
                       if (selectedCarType == '세단') {
                         exteriorOptions = ['G70', 'G80', 'G90'];
                       }else if (selectedCarType == 'SUV') {
                         exteriorOptions = ['GV60', 'GV70', 'GV80', 'GV90'];
                       } else { exteriorOptions = [];}
-                    } else if (selectedGender == 'BMW') {
+                    } else if (selectedManufacturer == 'BMW') {
                       if (selectedCarType == '세단') {
                         exteriorOptions = ['A클래스', 'CLA', 'C클래스', 'E클래스', 'S클래스', 'EQS', 'AMG GT 4-Door 쿠페'];
                       } else if (selectedCarType == 'SUV') {
@@ -240,7 +243,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                       } else if (selectedCarType == '버스') {
                         exteriorOptions = ['투리스모', '시타로'];
                       }
-                    } else if (selectedGender == '벤츠') {
+                    } else if (selectedManufacturer == '벤츠') {
                       if (selectedCarType == '세단') {
                         exteriorOptions = ['A클래스', 'CLA', 'C클래스', 'E클래스', 'S클래스', 'EQS', 'AMG GT 4-Door 쿠페'];
                       } else if (selectedCarType == 'SUV') {
@@ -258,7 +261,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                       } else if (selectedCarType == '버스') {
                         exteriorOptions = ['투리스모', '시타로'];
                       }
-                    }else if (selectedGender == '아우디') {
+                    }else if (selectedManufacturer == '아우디') {
                       if (selectedCarType == '세단') {
                         exteriorOptions = ['A3', 'A4', 'A6', 'A7', 'A8', 'S3', 'S4', 'S6', 'S7', 'S8', 'RS3', 'RS4', 'RS5', 'RS6', 'RS7'];
                       } else if (selectedCarType == '준대형') {
@@ -381,81 +384,127 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
             ),
             SizedBox(height: 16),
 
-        Text(
-        "연식",
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-        Container(
-          width: MediaQuery.of(context).size.width / 2, // 입력 박스 너비를 절반으로 줄임
-          decoration: BoxDecoration(
-            color: Colors.grey[300],
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  keyboardType: TextInputType.number, // 숫자 입력만 가능
-                  maxLines: 1, // 줄바꿈 방지
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly, // 숫자만 입력 가능
-                    LengthLimitingTextInputFormatter(4), // 4글자 제한
-                  ],
-                  decoration: InputDecoration(
-                    hintText: '연식을 입력하세요',
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                    counterText: "", // 입력 길이 표시 없애기
+            Text(
+              "연식",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            Container(
+              width: MediaQuery.of(context).size.width / 2, // 입력 박스 너비를 절반으로 줄임
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      keyboardType: TextInputType.number, // 숫자 입력만 가능
+                      maxLines: 1, // 줄바꿈 방지
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly, // 숫자만 입력 가능
+                        LengthLimitingTextInputFormatter(4), // 4글자 제한
+                      ],
+                      decoration: InputDecoration(
+                        hintText: '연식을 입력하세요',
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                        counterText: "", // 입력 길이 표시 없애기
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedCarYear = value;
+                        });
+                      },
+                    ),
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedCarYear = value;
-                    });
-                  },
-                ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      '년',
+                      style: TextStyle(fontWeight: FontWeight.bold), // '년' 글자에 굵은 글씨 스타일 적용
+                    ),
+                  ),
+                ],
               ),
+            ),
+            if (selectedCarYear != null && selectedCarYear!.length < 4 && selectedCarYear!.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
-                  '년',
-                  style: TextStyle(fontWeight: FontWeight.bold), // '년' 글자에 굵은 글씨 스타일 적용
+                  '연식은 4자리로 입력해주세요.',
+                  style: TextStyle(color: Colors.red, fontSize: 12),
                 ),
               ),
-            ],
-          ),
-        ),
-        if (selectedCarYear != null && selectedCarYear!.length < 4 && selectedCarYear!.isNotEmpty)
-    Padding(
-      padding: const EdgeInsets.only(top: 8.0),
-      child: Text(
-        '연식은 4자리로 입력해주세요.',
-        style: TextStyle(color: Colors.red, fontSize: 12),
-      ),
-    ),
-    SizedBox(height: 16),
+            SizedBox(height: 16),
 
+            Spacer(),
 
-
-
-    Spacer(),
-
-            // "등록" 버튼
-            Align(
-              alignment: Alignment.bottomCenter,
+            // 등록 버튼
+            Center(
               child: ElevatedButton(
-                onPressed: () {
-                  // 등록 버튼 클릭 시 동작
+                onPressed: () async {
+                  if ([selectedManufacturer, selectedCarType, selectedFuelType, selectedCarYear].contains(null)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('모든 필드를 입력해주세요!')),
+                    );
+                    return;
+                  }
+
+                  final requestData = {
+                    "carId": "test",
+                    "userId": "test",
+                    "manufacturer": selectedManufacturer,
+                    "size": selectedCarType,
+                    "model": selectedFuelType,
+                    "fuel": selectedCarColor,
+                    "displacement": selectedEngineCapacity,
+                    "year": selectedCarYear
+                  };
+
+                  try {
+                    final response = await http.post(
+                      Uri.parse("http://172.30.78.141:8080/api/car/add"),
+                      headers: {"Content-Type": "application/json"},
+                      body: jsonEncode(requestData),
+                    );
+
+                    final responseBody = jsonDecode(response.body);
+
+                    // 응답 코드와 본문을 콘솔에 로그로 출력
+                    print("Response Status: ${response.statusCode}");
+                    print("Response Body: ${response.body}");
+
+                    if (response.statusCode == 201 && responseBody['status'] == "true") {
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('차량 등록 성공: ${responseBody['message']}')),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('차량 등록 성공')),
+                      );
+                    }
+                  } catch (e) {
+                    // 예외 발생 시 로그에 출력
+                    print("Error: $e");
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('서버 오류: $e')),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF8CD8B4),
-                  minimumSize: Size(double.infinity, 50),
+                  backgroundColor: Color(0xFF8CD8B4), // 버튼 배경색
+                  minimumSize: Size(200, 50), // 버튼 크기 조정
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12), // 버튼 모서리 둥글게
+                  ),
                 ),
                 child: Text(
                   "등록",
                   style: TextStyle(
                     fontSize: 18,
-                    color: Colors.white,
-                    fontFamily: 'body',
+                    color: Colors.white, // 텍스트 색상
                   ),
                 ),
               ),
