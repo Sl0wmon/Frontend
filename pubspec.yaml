@@ -62,6 +62,8 @@ flutter:
     - family: head
       fonts:
         - asset: assets/fonts/free7Bold.ttf
+
+
   assets:
     - assets/images/speed.png
 
