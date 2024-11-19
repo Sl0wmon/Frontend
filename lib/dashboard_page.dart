@@ -48,7 +48,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> fetchData() async {
-    final url = Uri.parse('http://172.30.78.141:8080/api/dashboard/view');
+    final url = Uri.parse('http://172.17.96.1:8080/api/dashboard/view');
     final response = await http.post(url,
         body: jsonEncode({"userId": "test"}),
         headers: {"Content-Type": "application/json"});
@@ -105,7 +105,8 @@ class _DashboardPageState extends State<DashboardPage> {
             '대시보드',
             style: TextStyle(
                 fontSize: _getAdaptiveFontSize(context, 35),
-                fontFamily: 'head'
+                fontFamily: 'head',
+                color: colorFromHex('#818585')
             )
         ),
         leading: Builder(
@@ -195,7 +196,7 @@ class _DashboardPageState extends State<DashboardPage> {
             title: Text(
                 '알림',
                 style: TextStyle(
-                  fontFamily: 'body'
+                    fontFamily: 'body'
                 )
             ),
             onTap: () {
@@ -305,12 +306,12 @@ class _DashboardPageState extends State<DashboardPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-                title,
-                style: TextStyle(
-                    fontSize: _getAdaptiveFontSize(context, isLargeFont ? 20 : 16),
-                    color: Colors.black54,
-                    fontFamily: 'head'
-                ),
+              title,
+              style: TextStyle(
+                  fontSize: _getAdaptiveFontSize(context, isLargeFont ? 20 : 16),
+                  color: Colors.black54,
+                  fontFamily: 'head'
+              ),
             ),
             Spacer(),
             Center(

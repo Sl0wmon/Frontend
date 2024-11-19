@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'dashboard_page.dart';
 import 'speed_chart_painter.dart';  // SpeedChartPainter import
 import 'pedal_chart_painter.dart';  // PedalChartPainter import
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
 
 class RecordPage extends StatelessWidget {
   @override
@@ -18,7 +21,14 @@ class RecordPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('급발진 상황 기록'),
+        title: Text(
+          '급발진 상황 기록',
+          style: TextStyle(
+              fontFamily: 'head',
+              fontSize: 30,
+              color: colorFromHex('#818585')
+          ),
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.notifications),
@@ -42,13 +52,41 @@ class RecordPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('2024.09.04', style: TextStyle(fontSize: 20)),
-            Text('15:30:22 ~ 15:40:56', style: TextStyle(fontSize: 16)),
+            Text('2024.09.04',
+                style: TextStyle(
+                    fontSize: 20,
+                    fontFamily: 'head'
+                )
+            ),
+            Text('15:30:22 ~ 15:40:56',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontFamily: 'head'
+                )
+            ),
             SizedBox(height: 20),
-            Text('주행 거리', style: TextStyle(fontSize: 18)),
-            Text('1.54km', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Text('주행 거리',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontFamily: 'head',
+                    color: colorFromHex('#818585')
+                )
+            ),
+            Text('1.54km',
+                style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'head'
+                )
+            ),
             SizedBox(height: 20),
-            Text('페달 기록', style: TextStyle(fontSize: 18)),
+            Text('페달 기록',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontFamily: 'head',
+                    color: colorFromHex('#818585')
+                )
+            ),
             SizedBox(height: 10),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -64,7 +102,13 @@ class RecordPage extends StatelessWidget {
               ),
             ),
             SizedBox(height: 20),
-            Text('속도 기록', style: TextStyle(fontSize: 18)),
+            Text('속도 기록',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontFamily: 'head',
+                    color: colorFromHex('#818585')
+                )
+            ),
             SizedBox(height: 10),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -77,7 +121,13 @@ class RecordPage extends StatelessWidget {
               ),
             ),
             SizedBox(height: 10),
-            Text('평균 속도: ${averageSpeed.toStringAsFixed(2)} km/h', style: TextStyle(fontSize: 18)),
+            Text('평균 속도: ${averageSpeed.toStringAsFixed(2)} km/h',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontFamily: 'head',
+                    color: colorFromHex('#818585')
+                )
+            ),
           ],
         ),
       ),
