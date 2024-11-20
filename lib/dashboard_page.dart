@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'obd_guide_page.dart';
 import 'record_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -134,14 +135,14 @@ class _DashboardPageState extends State<DashboardPage> {
         title: Text(
           '대시보드',
           style: TextStyle(
-            fontSize: _getAdaptiveFontSize(context, 25),
+            fontSize: _getAdaptiveFontSize(context, 28),
             fontFamily: 'head',
-            color: Color(0xFF3E3E3E),
+            color: Color(0xFF818585),
           ),
         ),
         leading: Builder(
           builder: (context) => IconButton(
-            icon: Icon(Icons.menu),
+            icon: Icon(Icons.menu, color: Colors.grey),
             onPressed: () {
               Scaffold.of(context).openDrawer();
             },
@@ -188,40 +189,40 @@ class _DashboardPageState extends State<DashboardPage> {
               color: colorFromHex('#8CD8B4'),
             ),
           ),
-          ListTile(
-            title: Text('대시보드', style: TextStyle(fontFamily: 'body')),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          ListTile(
-            title: Text('급발진 상황 기록', style: TextStyle(fontFamily: 'body')),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => RecordPage()));
-            },
-          ),
-          ListTile(
-            title: Text('차량 부품 교체 주기', style: TextStyle(fontFamily: 'body')),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          ListTile(
-            title: Text('OBD 진단 가이드', style: TextStyle(fontFamily: 'body')),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          ListTile(
-            title: Text('알림', style: TextStyle(fontFamily: 'body')),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
+          _buildDrawerItem(context, "대시보드", Icons.dashboard, () {
+            Navigator.pop(context);
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => DashboardPage())
+            );
+          }),
+          _buildDrawerItem(context, "급발진 상황 기록", Icons.history, () {
+            Navigator.pop(context);
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => RecordPage()));
+          }),
+          _buildDrawerItem(context, "차량 부품 교체 주기", Icons.car_repair, () {
+            Navigator.pop(context);
+          }),
+          _buildDrawerItem(context, "OBD 진단 가이드", Icons.info, () {
+            Navigator.pop(context);
+          }),
+          _buildDrawerItem(context, "알림", Icons.notifications, () {
+            Navigator.pop(context);
+          }),
         ],
       ),
+    );
+  }
+
+  Widget _buildDrawerItem(
+      BuildContext context, String title, IconData icon, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: colorFromHex('#8CD8B4')),
+      title: Text(
+        title,
+        style: TextStyle(fontFamily: 'body'),
+      ),
+      onTap: onTap,
     );
   }
 

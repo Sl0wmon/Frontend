@@ -1,11 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // 날짜 형식 사용을 위해 추가
+import 'dashboard_page.dart';
+import 'obd_guide_page.dart';
 import 'info_box.dart';
 import 'stat_box.dart';
 import 'graph_card.dart';
 import 'pedal_chart.dart';
 import 'speed_chart.dart';
 
-class RecordPage extends StatelessWidget {
+class RecordPage extends StatefulWidget {
+  @override
+  _RecordPageState createState() => _RecordPageState();
+}
+
+class _RecordPageState extends State<RecordPage> {
+  String selectedDate = '2024.09.04'; // 초기 날짜 설정
+
+  void _selectDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate != null) {
+      setState(() {
+        selectedDate = DateFormat('yyyy.MM.dd').format(pickedDate); // 선택한 날짜 포맷팅
+      });
+    }
+  }
+
   Color colorFromHex(String hexColor) {
     hexColor = hexColor.replaceAll('#', '');
     if (hexColor.length == 6) {
@@ -18,10 +42,21 @@ class RecordPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Icon(Icons.menu, color: Colors.grey),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu, color: Colors.grey),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
+        ),
         title: Text(
           '급발진 상황 기록',
-          style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              fontSize: _getAdaptiveFontSize(context, 28),
+              fontFamily: 'head',
+              color: colorFromHex('#818585')
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -37,6 +72,7 @@ class RecordPage extends StatelessWidget {
           ),
         ),
       ),
+      drawer: _buildDrawer(context),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,7 +83,11 @@ class RecordPage extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  InfoBox(icon: Icons.calendar_today, text: '2024.09.04'),
+                  InfoBox(
+                    icon: Icons.calendar_today,
+                    text: selectedDate, // 선택한 날짜 표시
+                    onTap: () => _selectDate(context), // 날짜 선택
+                  ),
                   InfoBox(icon: Icons.access_time, text: '15:30:22~15:40:56'),
                 ],
               ),
@@ -83,6 +123,71 @@ class RecordPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  double _getAdaptiveFontSize(BuildContext context, double size) {
+    final screenSize = MediaQuery.of(context).size;
+    final aspectRatio = screenSize.width / screenSize.height;
+    final baseAspectRatio = 375.0 / 667.0;
+    return size * (aspectRatio / baseAspectRatio) *
+        MediaQuery.of(context).textScaleFactor;
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            child: Text(
+              '사이드 메뉴',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: _getAdaptiveFontSize(context, 24),
+                fontFamily: 'head',
+              ),
+            ),
+            decoration: BoxDecoration(
+              color: colorFromHex('#8CD8B4'),
+            ),
+          ),
+          _buildDrawerItem(context, "대시보드", Icons.dashboard, () {
+            Navigator.pop(context);
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => DashboardPage())
+            );
+          }),
+          _buildDrawerItem(context, "급발진 상황 기록", Icons.history, () {
+            Navigator.pop(context);
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => RecordPage()));
+          }),
+          _buildDrawerItem(context, "차량 부품 교체 주기", Icons.car_repair, () {
+            Navigator.pop(context);
+          }),
+          _buildDrawerItem(context, "OBD 진단 가이드", Icons.info, () {
+            Navigator.pop(context);
+            Navigator.push(
+              context, MaterialPageRoute(builder: (context) => ObdGuidePage())
+            );
+          }),
+          _buildDrawerItem(context, "알림", Icons.notifications, () {
+            Navigator.pop(context);
+          }),
+        ],
+      ),
+    );
+  }
+  Widget _buildDrawerItem(
+      BuildContext context, String title, IconData icon, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: colorFromHex('#8CD8B4')),
+      title: Text(
+        title,
+        style: TextStyle(fontFamily: 'body'),
+      ),
+      onTap: onTap,
     );
   }
 }
