@@ -48,7 +48,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> fetchData() async {
-    final url = Uri.parse('http://192.168.45.215:8080/api/dashboard/view');
+    final url = Uri.parse('http://172.30.78.141:8080/api/dashboard/view');
     final response = await http.post(url,
         body: jsonEncode({"userId": "test"}),
         headers: {"Content-Type": "application/json"});
@@ -73,6 +73,10 @@ class _DashboardPageState extends State<DashboardPage> {
           "${dashboardData['instantaneousFuelEfficiency'].toStringAsFixed(1)} km/L";
           fuelRate =
           "${dashboardData['instantaneousConsumption'].toStringAsFixed(2)} L/h";
+
+          // 디버그 메시지 추가
+          print('Updated values: speed=$speed, rpm=$rpm, coolantTemp=$coolantTemp, intakeTemp=$intakeTemp');
+
           isLoading = false;
         });
       }
@@ -89,24 +93,27 @@ class _DashboardPageState extends State<DashboardPage> {
     return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
-  Color _getCardColor(String title, [double speedValue = 0]) {
-    // 기본 색상
+  Color _getCardColor(String title, [double value = 0]) {
+    // 기본 색상과 기준값을 초과할 때의 색상 설정
     Color defaultColor = Color(0xFF8CD8B4);
+    Color alertColor = Color(0xFFF39393);
 
-    // 특정 타이틀에 따라 색상 지정
     switch (title) {
       case '속도':
-        return speedValue > 80 ? Colors.red[100]! : defaultColor;
+        return value > 80 ? alertColor : defaultColor;
       case '냉각수 온도':
-        return defaultColor;
+        return value > 100 ? alertColor : defaultColor;
       case '흡기 온도':
-        return defaultColor;
+        return value > 70 ? alertColor : defaultColor;
       case '엔진 부하':
-        return defaultColor;
+        return value > 80 ? alertColor : defaultColor;
+      case '흡기 압력':
+        return value > 120 ? alertColor : defaultColor;
       default:
         return defaultColor;
     }
   }
+
 
   double _getAdaptiveFontSize(BuildContext context, double size) {
     final screenSize = MediaQuery.of(context).size;
@@ -235,22 +242,24 @@ class _DashboardPageState extends State<DashboardPage> {
               crossAxisSpacing: 8, // 간격 조정
               mainAxisSpacing: 8, // 간격 조정
               children: [
-                _buildCardSingleLine('속도', '$speed km/h', cardWidth, cardHeight,
-                    isLargeFont: true),
                 _buildCardSingleLine(
-                    'RPM', '$rpm rpm', cardWidth, cardHeight, isLargeFont: true),
+                    '속도', '$speed km/h', cardWidth, cardHeight,
+                    isLargeFont: true, valueData: double.parse(speed)),
+                _buildCardSingleLine(
+                    'RPM', '$rpm rpm', cardWidth, cardHeight,
+                    isLargeFont: true, valueData: double.parse(rpm)),
                 _buildCardSingleLine(
                     '냉각수 온도', '$coolantTemp °C', cardWidth, cardHeight,
-                    isLargeFont: true),
+                    isLargeFont: true, valueData: double.parse(coolantTemp)),
                 _buildCardSingleLine(
                     '흡기 온도', '$intakeTemp °C', cardWidth, cardHeight,
-                    isLargeFont: true),
+                    isLargeFont: true, valueData: double.parse(intakeTemp)),
                 _buildCardSingleLine(
                     '엔진 부하', '$engineLoad %', cardWidth, cardHeight,
-                    isLargeFont: true),
+                    isLargeFont: true, valueData: double.parse(engineLoad)),
                 _buildCardSingleLine(
                     '흡기 압력', '$intakePressure kPa', cardWidth, cardHeight,
-                    isLargeFont: true),
+                    isLargeFont: true, valueData: double.parse(intakePressure)),
               ],
             ),
             SizedBox(height: 8),
@@ -283,20 +292,15 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-
-
-
-
   Widget _buildCardSingleLine(
       String title, String value, double cardWidth, double cardHeight,
-      {bool isLargeFont = false}) {
+      {bool isLargeFont = false, double? valueData}) {
     return Container(
       width: cardWidth,
       height: cardHeight,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start, // 위쪽 정렬
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          // 타이틀 텍스트와 Divider
           Align(
             alignment: Alignment.topCenter,
             child: Column(
@@ -312,54 +316,54 @@ class _DashboardPageState extends State<DashboardPage> {
                 Divider(
                   color: Color(0xFF8CD8B4),
                   thickness: 4,
-                  indent: 50, // Divider의 indent를 줄여서 간격을 줄임
-                  endIndent: 50, // Divider의 indent를 줄여서 간격을 줄임
-                  height: 3, // Divider와 텍스트 간의 간격을 최소화
+                  indent: 50,
+                  endIndent: 50,
+                  height: 3,
                 ),
               ],
             ),
           ),
-          // 카드 내용
           Card(
-            color: _getCardColor(title, double.parse(speed)),
+            color: _getCardColor(title, valueData ?? 0),
             elevation: 4,
-            margin: EdgeInsets.all(3), // 카드의 외부 여백을 제거
+            margin: EdgeInsets.all(3),
             child: Container(
               width: double.infinity,
-              height: cardHeight - 20, // 타이틀을 위해 약간 공간을 확보
+              height: cardHeight - 20,
               alignment: Alignment.center,
-              padding: const EdgeInsets.all(4.0), // 카드 내부 여백을 줄여서 간격을 최소화
+              padding: const EdgeInsets.all(4.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // 냉각수 온도와 흡입기 온도에만 막대그래프 표시
                   if (title == '냉각수 온도' || title == '흡기 온도')
                     Container(
-                      width: cardWidth * 0.8, // 카드 너비에 비례한 그래프 크기
-                      height: 17, // 그래프 높이
+                      width: cardWidth * 0.8,
+                      height: 17,
                       decoration: BoxDecoration(
-                        color: Color(0xFFE2FFF1), // 그래프 색상
+                        color: Color(0xFFE2FFF1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: FractionallySizedBox(
                         alignment: Alignment.centerLeft,
-                        widthFactor: double.parse(value.split(" ")[0]) / 100, // 온도에 따라 그래프 길이 설정 (0~100 범위로 설정)
+                        widthFactor: double.parse(value.split(" ")[0]) / 130,
                         child: Container(
-                          color: Color(0xFFEA7B7B), // 그래프 내부 색상
+                          decoration: BoxDecoration(
+                            color: Color(0xFFEA7B7B),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
                     ),
-                  // 아니면 이미지 표시
                   if (!(title == '냉각수 온도' || title == '흡기 온도'))
                     Image.asset(
-                      'assets/images/speed.png', // 이미지 파일 경로
-                      width: 50,  // 이미지 크기 조정
-                      height: 40, // 이미지 크기 조정
+                      'assets/images/speed.png',
+                      width: 50,
+                      height: 40,
                     ),
-                  SizedBox(height: 2),  // 이미지와 텍스트 사이의 간격
+                  SizedBox(height: 2),
                   Text.rich(
                     TextSpan(
-                      text: value.split(" ")[0], // 숫자 부분
+                      text: value.split(" ")[0],
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: isLargeFont
@@ -369,9 +373,9 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                       children: [
                         TextSpan(
-                          text: " ${value.split(" ")[1]}", // 단위 부분
+                          text: " ${value.split(" ")[1]}",
                           style: TextStyle(
-                            color: Color(0xFFE2FFF1), // 단위 텍스트 색상
+                            color: Color(0xFFE2FFF1),
                             fontSize: isLargeFont
                                 ? _getAdaptiveFontSize(context, 17)
                                 : _getAdaptiveFontSize(context, 16),
@@ -389,11 +393,6 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
-
-
-
-
-
 
 
   Widget _buildCardDoubleLine(
