@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.teal,
       ),
-      home: MyPage(),
+      home: LoginPage(),
       routes: {
         '/record': (context) => RecordPage(),
         '/dashboard': (context) => DashboardPage(),

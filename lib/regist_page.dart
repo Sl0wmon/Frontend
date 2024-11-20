@@ -38,11 +38,11 @@ class _RegistPageState extends State<RegistPage> {
           return; // 회원가입 중단
         }
       } else {
-        _showDialog("아이디-서버 오류", "서버와의 통신 중 오류가 발생했습니다.");
+        _showDialog("서버 오류", "서버와의 통신 중 오류가 발생했습니다.");
         return;
       }
     } catch (e) {
-      _showDialog("아이디-네트워크 오류", "네트워크 연결이 원활하지 않습니다.");
+      _showDialog("네트워크 오류", "네트워크 연결이 원활하지 않습니다.");
       return;
     }
 
@@ -62,11 +62,11 @@ class _RegistPageState extends State<RegistPage> {
           return;
         }
       } else {
-        _showDialog('전화번호-서버 오류', '서버와의 통신 중 오류가 발생했습니다.');
+        _showDialog('서버 오류', '서버와의 통신 중 오류가 발생했습니다.');
         return;
       }
     } catch (e) {
-      _showDialog("전화번호-네트워크 오류", "네트워크 연결이 원활하지 않습니다.");
+      _showDialog("네트워크 오류", "네트워크 연결이 원활하지 않습니다.");
       return;
     }
 
@@ -86,18 +86,18 @@ class _RegistPageState extends State<RegistPage> {
 
         if (data['success'] == "true") {
           _showDialog("회원가입 성공", "회원가입에 성공하셨습니다.");
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => LoginPage()),
+          Navigator.pop(context);
+          Navigator.push(
+            context, MaterialPageRoute(builder: (context) => LoginPage())
           );
         } else {
           _showDialog("회원가입 실패", "회원가입에 실패하였습니다. 잠시 후 다시 시도해 주십시오.");
         }
       } else {
-        _showDialog("회원가입-서버 오류", "서버와의 통신 중 오류가 발생했습니다.");
+        _showDialog("서버 오류", "서버와의 통신 중 오류가 발생했습니다.");
       }
     } catch (e) {
-      _showDialog("회원가입-네트워크 오류", "네트워크 연결이 원활하지 않습니다.");
+      _showDialog("네트워크 오류", "네트워크 연결이 원활하지 않습니다.");
     }
   }
 
