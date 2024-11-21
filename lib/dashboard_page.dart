@@ -5,12 +5,20 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 
+
 class DashboardPage extends StatefulWidget {
   @override
   _DashboardPageState createState() => _DashboardPageState();
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+
+  final Map<String, dynamic> userData = {
+    "userId": "test"// 서버에 보낼 사용자 데이터
+  };
+  String name = ""; // 이름 변수
+  String phone = ""; // 이름 변수
+
   String speed = '0.0';
   String rpm = '0.0';
   String coolantTemp = '0.0';
@@ -32,6 +40,7 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
     fetchData();
     timer = Timer.periodic(Duration(seconds: 1), (Timer t) => fetchData());
+    fetchUserInfo();  // 사용자 정보를 가져오는 함수 호출
   }
 
   @override
@@ -47,6 +56,36 @@ class _DashboardPageState extends State<DashboardPage> {
     }
     return Color(int.parse('0x$hexColor'));
   }
+
+  Future<void> fetchUserInfo() async {
+    try {
+      final url = Uri.parse('http://172.30.78.141:8080/api/user/view');
+
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"userId": "kchh0925"}),
+      );
+
+      if (response.statusCode == 200) {
+        // UTF-8 디코딩
+        var jsonData = json.decode(utf8.decode(response.bodyBytes));
+
+        if (jsonData['success'] == "true" && jsonData['data'] != null) {
+          setState(() {
+            name = jsonData['data']['name'];
+          });
+        } else {
+          print('Unexpected response format: ${jsonData.toString()}');
+        }
+      } else {
+        print('Failed to load user info. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching user info: $e');
+    }
+  }
+
 
   Future<void> fetchData() async {
     final url = Uri.parse('http://172.30.78.141:8080/api/dashboard/view');
@@ -177,16 +216,60 @@ class _DashboardPageState extends State<DashboardPage> {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            child: Text(
-              '사이드 메뉴',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: _getAdaptiveFontSize(context, 24),
-                fontFamily: 'head',
-              ),
-            ),
             decoration: BoxDecoration(
               color: colorFromHex('#8CD8B4'),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '사이드 메뉴',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: _getAdaptiveFontSize(context, 24),
+                    fontFamily: 'head',
+                  ),
+                ),
+                SizedBox(height: 40), // 사이드 메뉴와 이름 간격 조정
+                Row(
+                  children: [
+                    // 프로필 이미지 위치
+                    Container(
+                      width: 35,
+                      height: 35,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: AssetImage('assets/images/profile.png'), // 이미지 경로 지정
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10), // 이미지와 텍스트 간격 조정
+                    Expanded(
+                      child: Text(
+                        '$name님', // 이름 텍스트 표시
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: _getAdaptiveFontSize(context, 18),
+                            fontFamily: 'body',
+                            fontWeight: FontWeight.bold
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        // 버튼 클릭 시 동작
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
           _buildDrawerItem(context, "대시보드", Icons.dashboard, () {
@@ -205,6 +288,8 @@ class _DashboardPageState extends State<DashboardPage> {
           }),
           _buildDrawerItem(context, "OBD 진단 가이드", Icons.info, () {
             Navigator.pop(context);
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => ObdGuidePage()));
           }),
           _buildDrawerItem(context, "알림", Icons.notifications, () {
             Navigator.pop(context);
@@ -501,8 +586,4 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
-
-
-
-
 }

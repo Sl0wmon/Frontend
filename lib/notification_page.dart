@@ -1,40 +1,26 @@
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // 날짜 형식 사용을 위해 추가
+import 'package:slomon/dashboard_page.dart';
+import 'package:slomon/obd_guide_page.dart';
+import 'package:slomon/record_page.dart';
 import 'package:slomon/replacementCycle.dart';
-import 'dashboard_page.dart';
+
 import 'myPage.dart';
-import 'notification_page.dart';
-import 'obd_guide_page.dart';
-import 'info_box.dart';
-import 'stat_box.dart';
-import 'graph_card.dart';
-import 'pedal_chart.dart';
-import 'speed_chart.dart';
-import 'package:http/http.dart' as http;
 
-
-class RecordPage extends StatefulWidget {
+class NotificationPage extends StatefulWidget {
   @override
-  _RecordPageState createState() => _RecordPageState();
+  _NotificationPageState createState() => _NotificationPageState();
 }
 
-class _RecordPageState extends State<RecordPage> {
-  String selectedDate = '2024.09.04'; // 초기 날짜 설정
-
+class _NotificationPageState extends State<NotificationPage> {
+  @override
   final Map<String, dynamic> userData = {
     "userId": "test"// 서버에 보낼 사용자 데이터
   };
   String name = ""; // 이름 변수
-  String phone = "";
-
-  @override
-  void initState() {
-    super.initState();
-    fetchUserInfo();  // 사용자 정보를 가져오는 함수 호출
-  }
-
+  String phone = ""; // 이름 변수
 
   Future<void> fetchUserInfo() async {
     try {
@@ -65,115 +51,15 @@ class _RecordPageState extends State<RecordPage> {
     }
   }
 
-  void _selectDate(BuildContext context) async {
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (pickedDate != null) {
-      setState(() {
-        selectedDate = DateFormat('yyyy.MM.dd').format(pickedDate); // 선택한 날짜 포맷팅
-      });
-    }
-  }
-
-  Color colorFromHex(String hexColor) {
-    hexColor = hexColor.replaceAll('#', '');
-    if (hexColor.length == 6) {
-      hexColor = 'FF' + hexColor;
-    }
-    return Color(int.parse('0x$hexColor'));
-  }
-
-
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: Colors.grey),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
-        ),
-        title: Text(
-          '급발진 상황 기록',
-          style: TextStyle(
-              fontSize: _getAdaptiveFontSize(context, 28),
-              fontFamily: 'head',
-              color: colorFromHex('#818585')
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          Icon(Icons.notifications, color: Colors.grey),
-        ],
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(2),
-          child: Container(
-            height: 2,
-            color: colorFromHex('#8CD8B4'),
-          ),
-        ),
+  Widget _buildDrawerItem(
+      BuildContext context, String title, IconData icon, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: Color(0xFF8CD8B4)),
+      title: Text(
+        title,
+        style: TextStyle(fontFamily: 'body'),
       ),
-      drawer: _buildDrawer(context),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 날짜 및 시간
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  InfoBox(
-                    icon: Icons.calendar_today,
-                    text: selectedDate, // 선택한 날짜 표시
-                    onTap: () => _selectDate(context), // 날짜 선택
-                  ),
-                  InfoBox(icon: Icons.access_time, text: '15:30:22~15:40:56'),
-                ],
-              ),
-            ),
-            // 주행 거리
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: StatBox(
-                label: '주행 거리',
-                value: '1.54km',
-                color: colorFromHex('#8CD8B4'),
-              ),
-            ),
-            SizedBox(height: 16),
-            // 페달 기록 그래프
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: GraphCard(
-                title: '페달 기록',
-                child: PedalChart(),
-              ),
-            ),
-            SizedBox(height: 16),
-            // 속도 그래프
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: GraphCard(
-                title: '속도',
-                subtitle: '평균: 165km',
-                child: SpeedChart(),
-              ),
-            ),
-          ],
-        ),
-      ),
+      onTap: onTap,
     );
   }
 
@@ -183,6 +69,12 @@ class _RecordPageState extends State<RecordPage> {
     final baseAspectRatio = 375.0 / 667.0;
     return size * (aspectRatio / baseAspectRatio) *
         MediaQuery.of(context).textScaleFactor;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserInfo();  // 사용자 정보를 가져오는 함수 호출
   }
 
   Widget _buildDrawer(BuildContext context) {
@@ -279,15 +171,101 @@ class _RecordPageState extends State<RecordPage> {
       ),
     );
   }
-  Widget _buildDrawerItem(
-      BuildContext context, String title, IconData icon, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: colorFromHex('#8CD8B4')),
-      title: Text(
-        title,
-        style: TextStyle(fontFamily: 'body'),
+
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu, color: Colors.grey),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
+        ),
+        title: Text(
+          '알림',
+          style: TextStyle(
+              fontSize: _getAdaptiveFontSize(context, 28),
+              fontFamily: 'head',
+              color: Color(0xFF818585)
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          Icon(Icons.notifications, color: Colors.grey),
+        ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(2),
+          child: Container(
+            height: 7,
+            color: Color(0xFF8CD8B4),
+          ),
+        ),
       ),
-      onTap: onTap,
+      drawer: _buildDrawer(context),
+      body: Container(
+        color: Colors.grey[200], // 전체 배경 회색 설정
+        child: Column(
+          children: [
+            Container(
+              height: 0.0,
+              color: Color(0xFF8CD8B4), // 경계선 색상
+            ),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15.0), // 둥근 모서리
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.5),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                        offset: Offset(0, 3), // 그림자 위치
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '알림 내용',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 4.0), // 텍스트와 선 사이 간격
+                        Container(
+                          height: 2.0,
+                          color: Color(0xFF8CD8B4),
+                          width: 40.0, // 텍스트 길이에 맞추기 위해 고정 폭 설정
+                        ),
+                        SizedBox(height: 16.0), // 선과 다른 내용 사이의 간격
+                        Expanded(
+                          child: Center(
+                            child: Text(
+                              '여기에 알림 내용이 표시됩니다.',
+                              style: TextStyle(fontSize: 16, color: Colors.black54),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

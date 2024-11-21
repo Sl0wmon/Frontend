@@ -21,6 +21,40 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
   List<String> carTypeOptions = []; // 차급 옵션 리스트
   List<String> exteriorOptions = []; // 외형 옵션 리스트
 
+  final Map<String, dynamic> userData = {
+    "userId": "test"// 서버에 보낼 사용자 데이터
+  };
+  String name = ""; // 이름 변수
+
+
+  Future<void> fetchUserInfo() async {
+    try {
+      final url = Uri.parse('http://172.30.78.141:8080/api/user/view');
+
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"userId": "kchh0925"}),
+      );
+
+      if (response.statusCode == 200) {
+        // UTF-8 디코딩
+        var jsonData = json.decode(utf8.decode(response.bodyBytes));
+
+        if (jsonData['success'] == "true" && jsonData['data'] != null) {
+          setState(() {
+            name = jsonData['data']['name'];
+          });
+        } else {
+          print('Unexpected response format: ${jsonData.toString()}');
+        }
+      } else {
+        print('Failed to load user info. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching user info: $e');
+    }
+  }
 
 
   @override

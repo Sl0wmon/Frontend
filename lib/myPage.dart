@@ -2,7 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:slomon/addCarInfo.dart'; // JSON 디코딩 및 인코딩
+import 'package:slomon/addCarInfo_page.dart';
+import 'package:slomon/dashboard_page.dart';
+import 'package:slomon/notification_page.dart';
+import 'package:slomon/record_page.dart';
+import 'package:slomon/replacementCycle.dart';
+
+import 'obd_guide_page.dart';
 
 class MyPage extends StatefulWidget {
   @override
@@ -13,7 +19,7 @@ class MyPage extends StatefulWidget {
 class _MyPageState extends State<MyPage> {
   bool isLoading = false;
   final Map<String, dynamic> userData = {
-    "userId": "test" // 서버에 보낼 사용자 데이터
+    "userId": "kchh0925" // 서버에 보낼 사용자 데이터
   };
 
   String name = ""; // 이름 변수
@@ -41,7 +47,7 @@ class _MyPageState extends State<MyPage> {
 
       if (response.statusCode == 200) {
         // 서버로부터 받은 데이터를 파싱
-        var jsonData = json.decode(response.body);
+        var jsonData = json.decode(utf8.decode(response.bodyBytes));
 
         if (jsonData['success'] == "true" && jsonData['data'] != null) {
           setState(() {
@@ -96,7 +102,7 @@ class _MyPageState extends State<MyPage> {
       final response = await http.post(
         Uri.parse('http://172.30.78.141:8080/api/car/view/user'),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"userId": "test"}), // 사용자 ID로 차량 정보 조회
+        body: jsonEncode({"userId": "kchh0925"}), // 사용자 ID로 차량 정보 조회
       );
 
       if (response.statusCode == 200) {
@@ -147,24 +153,156 @@ class _MyPageState extends State<MyPage> {
     // 페이지 로드 시 데이터 가져오기
   }
 
+  double _getAdaptiveFontSize(BuildContext context, double size) {
+    final screenSize = MediaQuery.of(context).size;
+    final aspectRatio = screenSize.width / screenSize.height;
+    final baseAspectRatio = 375.0 / 667.0;
+    return size * (aspectRatio / baseAspectRatio) *
+        MediaQuery.of(context).textScaleFactor;
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Color(0xFF8CD8B4),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '사이드 메뉴',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: _getAdaptiveFontSize(context, 24),
+                    fontFamily: 'head',
+                  ),
+                ),
+                SizedBox(height: 40), // 사이드 메뉴와 이름 간격 조정
+                Row(
+                  children: [
+                    // 프로필 이미지 위치
+                    Container(
+                      width: 35,
+                      height: 35,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: AssetImage('assets/images/profile.png'), // 이미지 경로 지정
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10), // 이미지와 텍스트 간격 조정
+                    Expanded(
+                      child: Text(
+                        '$name님', // 이름 텍스트 표시
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: _getAdaptiveFontSize(context, 18),
+                            fontFamily: 'body',
+                            fontWeight: FontWeight.bold
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                            context, MaterialPageRoute(builder: (context) => MyPage())
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          _buildDrawerItem(context, "대시보드", Icons.dashboard, () {
+            Navigator.pop(context);
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => DashboardPage())
+            );
+          }),
+          _buildDrawerItem(context, "급발진 상황 기록", Icons.history, () {
+            Navigator.pop(context);
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => RecordPage()));
+          }),
+          _buildDrawerItem(context, "차량 부품 교체 주기", Icons.car_repair, () {
+            Navigator.pop(context);
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => ReplacementCyclePage()));
+          }),
+          _buildDrawerItem(context, "OBD 진단 가이드", Icons.info, () {
+            Navigator.pop(context);
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => ObdGuidePage()));
+          }),
+          _buildDrawerItem(context, "알림", Icons.notifications, () {
+            Navigator.pop(context);
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => NotificationPage()));
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(
+      BuildContext context, String title, IconData icon, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: Color(0xFF8CD8B4)),
+      title: Text(
+        title,
+        style: TextStyle(fontFamily: 'body'),
+      ),
+      onTap: onTap,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: Text(
-            '<',
-            style: TextStyle(fontSize: 24, color: Colors.black, fontFamily: 'body'),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu, color: Colors.grey),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
           ),
-          onPressed: () => Navigator.pop(context),
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
         ),
         title: Text(
           '개인페이지',
-          style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'head'),
+          style: TextStyle(
+              fontSize: _getAdaptiveFontSize(context, 28),
+              fontFamily: 'head',
+              color: Color(0xFF818585)
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          Icon(Icons.notifications, color: Colors.grey),
+        ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(2),
+          child: Container(
+            height: 2,
+            color: Color(0xFF8CD8B4),
+          ),
         ),
       ),
+      drawer: _buildDrawer(context),
       body: Container(
         color: Colors.grey[200], // 전체 배경 회색 설정
         child: Column(
@@ -255,30 +393,30 @@ class _MyPageState extends State<MyPage> {
                                   fontFamily: 'head', // 'head' 폰트 적용
                                 ),
                               ),
-                      ElevatedButton(
-                        onPressed: () {
-                          // 차량 정보 등록 또는 수정 페이지로 이동
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => AddCarInfoPage()), // AddCarInfoPage로 이동
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF8CD8B4),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20.0),
-                          ),
-                        ),
-                        child: Text(
-                          carManufacturer == "정보 없음" ? "등록" : "수정",
-                          style: TextStyle(
-                            fontFamily: 'body',
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 17,
-                          ),
-                        ),
-                      ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  // 차량 정보 등록 또는 수정 페이지로 이동
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => AddCarInfoPage()), // AddCarInfoPage로 이동
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Color(0xFF8CD8B4),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20.0),
+                                  ),
+                                ),
+                                child: Text(
+                                  carManufacturer == "정보 없음" ? "등록" : "수정",
+                                  style: TextStyle(
+                                    fontFamily: 'body',
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 17,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                           SizedBox(height: 16),
