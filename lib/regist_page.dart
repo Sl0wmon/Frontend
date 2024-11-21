@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart';
-import 'http_service.dart'; // HttpService를 import합니다.
+import 'http_service.dart';
 import 'dart:convert';
 
 class RegistPage extends StatefulWidget {
@@ -10,8 +10,10 @@ class RegistPage extends StatefulWidget {
 
 class _RegistPageState extends State<RegistPage> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
   String? _userId;
-  String? _password;
   String? _name;
   String? _phoneNumber;
 
@@ -22,10 +24,14 @@ class _RegistPageState extends State<RegistPage> {
 
     _formKey.currentState!.save(); // 입력된 데이터 저장
 
+    // 비밀번호와 비밀번호 확인 값이 같은지 확인
+    if (_passwordController.text != _confirmPasswordController.text) {
+      _showDialog("비밀번호 불일치", "비밀번호와 비밀번호 확인이 일치하지 않습니다.");
+      return;
+    }
+
     // 아이디 중복 체크
-    final checkIdData = {
-      "userId": _userId
-    };
+    final checkIdData = {"userId": _userId};
 
     try {
       final response = await HttpService().postRequest("user/checkId", checkIdData);
@@ -35,7 +41,7 @@ class _RegistPageState extends State<RegistPage> {
 
         if (data["data"] == true) {
           _showDialog("중복된 아이디", "이미 사용 중인 아이디입니다. 다른 아이디를 입력하세요.");
-          return; // 회원가입 중단
+          return;
         }
       } else {
         _showDialog("서버 오류", "서버와의 통신 중 오류가 발생했습니다.");
@@ -47,12 +53,11 @@ class _RegistPageState extends State<RegistPage> {
     }
 
     // 전화번호 중복 체크
-    final checkPhoneData = {
-      "phoneNumber": _phoneNumber
-    };
+    final checkPhoneData = {"phoneNumber": _phoneNumber};
 
     try {
-      final response = await HttpService().postRequest("user/checkPhoneNumber", checkPhoneData);
+      final response =
+      await HttpService().postRequest("user/checkPhoneNumber", checkPhoneData);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -73,7 +78,7 @@ class _RegistPageState extends State<RegistPage> {
     // 회원가입 요청 데이터
     final data = {
       "userId": _userId,
-      "pw": _password,
+      "pw": _passwordController.text,
       "name": _name,
       "phoneNumber": _phoneNumber,
     };
@@ -88,8 +93,7 @@ class _RegistPageState extends State<RegistPage> {
           _showDialog("회원가입 성공", "회원가입에 성공하셨습니다.");
           Navigator.pop(context);
           Navigator.push(
-            context, MaterialPageRoute(builder: (context) => LoginPage())
-          );
+              context, MaterialPageRoute(builder: (context) => LoginPage()));
         } else {
           _showDialog("회원가입 실패", "회원가입에 실패하였습니다. 잠시 후 다시 시도해 주십시오.");
         }
@@ -176,6 +180,7 @@ class _RegistPageState extends State<RegistPage> {
               ),
               SizedBox(height: 16),
               TextFormField(
+                controller: _passwordController,
                 decoration: InputDecoration(
                   labelText: '비밀번호',
                   labelStyle: TextStyle(
@@ -194,8 +199,30 @@ class _RegistPageState extends State<RegistPage> {
                   }
                   return null;
                 },
-                onSaved: (value) {
-                  _password = value;
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _confirmPasswordController,
+                decoration: InputDecoration(
+                  labelText: '비밀번호 확인',
+                  labelStyle: TextStyle(
+                      fontFamily: 'body', fontSize: 18, color: colorFromHex('#818585')),
+                  filled: true,
+                  fillColor: colorFromHex('#F0F0F0'),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return '비밀번호 확인을 입력하세요.';
+                  }
+                  if (value != _passwordController.text) {
+                    return '비밀번호가 일치하지 않습니다.';
+                  }
+                  return null;
                 },
               ),
               SizedBox(height: 16),
@@ -238,12 +265,19 @@ class _RegistPageState extends State<RegistPage> {
                   if (value == null || value.isEmpty) {
                     return '전화번호를 입력하세요.';
                   }
+                  if (value.length != 11) { // 전화번호 길이 확인
+                    return '전화번호는 10자리여야 합니다.';
+                  }
+                  if (!RegExp(r'^\d+$').hasMatch(value)) { // 숫자인지 확인
+                    return '전화번호는 숫자만 입력 가능합니다.';
+                  }
                   return null;
                 },
                 onSaved: (value) {
                   _phoneNumber = value;
                 },
               ),
+
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: registerUser,
