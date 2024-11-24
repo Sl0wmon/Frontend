@@ -1,8 +1,7 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // 날짜 형식 사용을 위해 추가
-import 'package:slomon/replacementCycle.dart';
+import 'replacementCycle.dart';
 import 'dashboard_page.dart';
 import 'myPage.dart';
 import 'notification_page.dart';
@@ -16,6 +15,8 @@ import 'package:http/http.dart' as http;
 
 
 class RecordPage extends StatefulWidget {
+  const RecordPage({super.key});
+
   @override
   _RecordPageState createState() => _RecordPageState();
 }
@@ -43,7 +44,7 @@ class _RecordPageState extends State<RecordPage> {
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
-        body: json.encode({"userId": "kchh0925"}),
+        body: json.encode({"userId": "test"}), // "test"로 사용자 ID를 보냄
       );
 
       if (response.statusCode == 200) {
@@ -51,9 +52,32 @@ class _RecordPageState extends State<RecordPage> {
         var jsonData = json.decode(utf8.decode(response.bodyBytes));
 
         if (jsonData['success'] == "true" && jsonData['data'] != null) {
-          setState(() {
-            name = jsonData['data']['name'];
+          List<dynamic> records = jsonData['data'];  // 급발진 기록 리스트
+          // 급발진 기록을 최근 시간 순으로 정렬
+          records.sort((a, b) {
+            DateTime aTime = DateTime(a['suaonTime'][0], a['suaonTime'][1], a['suaonTime'][2], a['suaonTime'][3], a['suaonTime'][4]);
+            DateTime bTime = DateTime(b['suaonTime'][0], b['suaonTime'][1], b['suaonTime'][2], b['suaonTime'][3], b['suaonTime'][4]);
+            return bTime.compareTo(aTime); // 내림차순 정렬
           });
+
+          if (records.isNotEmpty) {
+            var latestRecord = records[0]; // 최신 기록 선택
+            setState(() {
+              // 최신 기록의 시간을 화면에 표시
+              DateTime onTime = DateTime(latestRecord['suaonTime'][0], latestRecord['suaonTime'][1], latestRecord['suaonTime'][2], latestRecord['suaonTime'][3], latestRecord['suaonTime'][4]);
+              DateTime offTime = DateTime(latestRecord['suaoffTime'][0], latestRecord['suaoffTime'][1], latestRecord['suaoffTime'][2], latestRecord['suaoffTime'][3], latestRecord['suaoffTime'][4]);
+
+              // 시간 포맷팅
+              String formattedOnTime = DateFormat('yyyy.MM.dd HH:mm').format(onTime);
+              String formattedOffTime = DateFormat('yyyy.MM.dd HH:mm').format(offTime);
+
+              // 선택한 날짜와 시간을 최신 기록으로 업데이트
+              selectedDate = formattedOnTime; // 선택한 날짜를 기록의 시작 시간으로 업데이트
+              print("급발진 시작 시간: $formattedOnTime, 종료 시간: $formattedOffTime");
+            });
+          } else {
+            print('급발진 기록이 없습니다.');
+          }
         } else {
           print('Unexpected response format: ${jsonData.toString()}');
         }
@@ -64,6 +88,7 @@ class _RecordPageState extends State<RecordPage> {
       print('Error fetching user info: $e');
     }
   }
+
 
   void _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
@@ -82,7 +107,7 @@ class _RecordPageState extends State<RecordPage> {
   Color colorFromHex(String hexColor) {
     hexColor = hexColor.replaceAll('#', '');
     if (hexColor.length == 6) {
-      hexColor = 'FF' + hexColor;
+      hexColor = 'FF$hexColor';
     }
     return Color(int.parse('0x$hexColor'));
   }
@@ -95,7 +120,7 @@ class _RecordPageState extends State<RecordPage> {
       appBar: AppBar(
         leading: Builder(
           builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: Colors.grey),
+            icon: const Icon(Icons.menu, color: Colors.grey),
             onPressed: () {
               Scaffold.of(context).openDrawer();
             },
@@ -112,11 +137,11 @@ class _RecordPageState extends State<RecordPage> {
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
-        actions: [
+        actions: const [
           Icon(Icons.notifications, color: Colors.grey),
         ],
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(2),
+          preferredSize: const Size.fromHeight(2),
           child: Container(
             height: 2,
             color: colorFromHex('#8CD8B4'),
@@ -139,7 +164,7 @@ class _RecordPageState extends State<RecordPage> {
                     text: selectedDate, // 선택한 날짜 표시
                     onTap: () => _selectDate(context), // 날짜 선택
                   ),
-                  InfoBox(icon: Icons.access_time, text: '15:30:22~15:40:56'),
+                  const InfoBox(icon: Icons.access_time, text: '15:30:22~15:40:56'),
                 ],
               ),
             ),
@@ -152,19 +177,19 @@ class _RecordPageState extends State<RecordPage> {
                 color: colorFromHex('#8CD8B4'),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             // 페달 기록 그래프
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: GraphCard(
                 title: '페달 기록',
                 child: PedalChart(),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             // 속도 그래프
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: GraphCard(
                 title: '속도',
                 subtitle: '평균: 165km',
@@ -180,7 +205,7 @@ class _RecordPageState extends State<RecordPage> {
   double _getAdaptiveFontSize(BuildContext context, double size) {
     final screenSize = MediaQuery.of(context).size;
     final aspectRatio = screenSize.width / screenSize.height;
-    final baseAspectRatio = 375.0 / 667.0;
+    const baseAspectRatio = 375.0 / 667.0;
     return size * (aspectRatio / baseAspectRatio) *
         MediaQuery.of(context).textScaleFactor;
   }
@@ -191,7 +216,7 @@ class _RecordPageState extends State<RecordPage> {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Color(0xFF8CD8B4),
             ),
             child: Column(
@@ -205,14 +230,14 @@ class _RecordPageState extends State<RecordPage> {
                     fontFamily: 'head',
                   ),
                 ),
-                SizedBox(height: 40), // 사이드 메뉴와 이름 간격 조정
+                const SizedBox(height: 40), // 사이드 메뉴와 이름 간격 조정
                 Row(
                   children: [
                     // 프로필 이미지 위치
                     Container(
                       width: 35,
                       height: 35,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         image: DecorationImage(
                           image: AssetImage('assets/images/profile.png'), // 이미지 경로 지정
@@ -220,7 +245,7 @@ class _RecordPageState extends State<RecordPage> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 10), // 이미지와 텍스트 간격 조정
+                    const SizedBox(width: 10), // 이미지와 텍스트 간격 조정
                     Expanded(
                       child: Text(
                         '$name님', // 이름 텍스트 표시
@@ -233,14 +258,14 @@ class _RecordPageState extends State<RecordPage> {
                       ),
                     ),
                     IconButton(
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.arrow_forward_ios,
                         color: Colors.white,
                         size: 20,
                       ),
                       onPressed: () {
                         Navigator.push(
-                            context, MaterialPageRoute(builder: (context) => MyPage())
+                            context, MaterialPageRoute(builder: (context) => const MyPage())
                         );
                       },
                     ),
@@ -252,28 +277,26 @@ class _RecordPageState extends State<RecordPage> {
           _buildDrawerItem(context, "대시보드", Icons.dashboard, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => DashboardPage())
+                context, MaterialPageRoute(builder: (context) => const DashboardPage())
             );
           }),
           _buildDrawerItem(context, "급발진 상황 기록", Icons.history, () {
             Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => RecordPage()));
           }),
           _buildDrawerItem(context, "차량 부품 교체 주기", Icons.car_repair, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => ReplacementCyclePage()));
+                context, MaterialPageRoute(builder: (context) => const ReplacementCyclePage()));
           }),
           _buildDrawerItem(context, "OBD 진단 가이드", Icons.info, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => ObdGuidePage()));
+                context, MaterialPageRoute(builder: (context) => const ObdGuidePage()));
           }),
           _buildDrawerItem(context, "알림", Icons.notifications, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => NotificationPage()));
+                context, MaterialPageRoute(builder: (context) => const NotificationPage()));
           }),
         ],
       ),
@@ -285,7 +308,7 @@ class _RecordPageState extends State<RecordPage> {
       leading: Icon(icon, color: colorFromHex('#8CD8B4')),
       title: Text(
         title,
-        style: TextStyle(fontFamily: 'body'),
+        style: const TextStyle(fontFamily: 'body'),
       ),
       onTap: onTap,
     );

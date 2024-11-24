@@ -1,20 +1,39 @@
 import 'package:flutter/material.dart';
-import 'dashboard_page.dart'; // DashboardPage를 import합니다.
-import 'regist_page.dart'; // RegistPage를 import합니다. (추가)
+import 'package:provider/provider.dart';
+import 'dashboard_page.dart';
+import 'regist_page.dart';
 import 'http_service.dart';
 import 'dart:convert';
+import 'user_provider.dart'; // UserProvider를 import합니다.
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  String? _userId;  // userId로 변경
+  String? _userId;
   String? _password;
 
-  // fetchData 함수 수정
+  // 로그인 상태 확인 코드
+  @override
+  void initState() {
+    super.initState();
+    // 로그인 상태 확인
+    Future.delayed(Duration.zero, () {
+      final userProvider = context.read<UserProvider>();
+      if (userProvider.userId != null && userProvider.password != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardPage()),
+        );
+      }
+    });
+  }
+
   Future<void> fetchData() async {
     final loginData = {
       "userId": _userId,
@@ -27,46 +46,58 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        // 로그인 성공 시
-        if (data['success'] == "true") {
-          if (data['data'] == true) {
-            // 로그인 성공 후 DashboardPage로 이동
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => DashboardPage()),
-            );
+        if (data['success'] == "true" && data['data'] == true) {
+          final userInfoResponse = await HttpService().postRequest("user/view",
+              {"userId": _userId},
+          );
+
+          if (userInfoResponse.statusCode == 200) {
+            final userInfo = jsonDecode(userInfoResponse.body);
+
+            if (userInfo['success'] == "true") {
+              final userData = userInfo['data'];
+
+              context.read<UserProvider>().login(
+                _userId!,
+                _password!,
+                name: userData['name'],
+                phoneNumber: userData['phoneNumber'],
+              );
+
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const DashboardPage()),
+              );
+            } else {
+              _showDialog("회원 정보를 가져오는 데 실패했습니다.");
+            }
           } else {
-            // 아이디와 비밀번호 오류 표시
-            _showInputError("아이디와 비밀번호를 확인해주세요.");
+            _showDialog("회원 정보 조회 서버 오류가 발생했습니다.");
           }
         } else {
-          // 로그인 실패 처리
-          _showDialog("로그인에 실패했습니다.");
+          _showInputError("아이디와 비밀번호를 확인해주세요.");
         }
       } else {
-        // 서버 오류 처리
         _showDialog("서버 오류가 발생했습니다.");
       }
     } catch (e) {
-      // 네트워크 오류 처리
       _showDialog("네트워크 오류가 발생했습니다.");
     }
   }
 
-  // Dialog 메시지 표시 함수
   void _showDialog(String message) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("알림"),
+          title: const Text("알림"),
           content: Text(message),
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // 다이얼로그 닫기
+                Navigator.of(context).pop();
               },
-              child: Text("확인"),
+              child: const Text("확인"),
             ),
           ],
         );
@@ -74,19 +105,16 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // 아이디와 비밀번호 필드에 오류 표시
   void _showInputError(String message) {
     setState(() {
-      // 필드에 오류 표시
       if (_userId?.isEmpty ?? true) {
-        _userId = '';  // 빈 값으로 만들어서 오류를 트리거
+        _userId = '';
       }
       if (_password?.isEmpty ?? true) {
-        _password = '';  // 빈 값으로 만들어서 오류를 트리거
+        _password = '';
       }
     });
-
-    _showDialog(message);  // Dialog 메시지 표시
+    _showDialog(message);
   }
 
   @override
@@ -105,7 +133,7 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(4.0),
+          preferredSize: const Size.fromHeight(4.0),
           child: Container(
             color: colorFromHex('#8CD8B4'),
             height: 4.0,
@@ -143,7 +171,7 @@ class _LoginPageState extends State<LoginPage> {
                   _userId = value; // userId로 수정
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 decoration: InputDecoration(
                   labelText: '비밀번호',
@@ -169,14 +197,14 @@ class _LoginPageState extends State<LoginPage> {
                   _password = value;
                 },
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colorFromHex('#8CD8B4'), // 버튼 색상
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 12), // 버튼 가로 길이 조정
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12), // 버튼 가로 길이 조정
                 ),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
@@ -192,7 +220,7 @@ class _LoginPageState extends State<LoginPage> {
                       fontFamily: 'head'),
                 ),
               ),
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
               Text(
                 '아직 회원이 아니신가요?',
                 style: TextStyle(
@@ -204,7 +232,7 @@ class _LoginPageState extends State<LoginPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => RegistPage()), // 회원가입 페이지로 이동
+                    MaterialPageRoute(builder: (context) => const RegistPage()), // 회원가입 페이지로 이동
                   );
                 },
                 child: Text(
@@ -227,7 +255,7 @@ class _LoginPageState extends State<LoginPage> {
   Color colorFromHex(String hexColor) {
     hexColor = hexColor.replaceAll('#', '');
     if (hexColor.length == 6) {
-      hexColor = 'FF' + hexColor;
+      hexColor = 'FF$hexColor';
     }
     return Color(int.parse('0x$hexColor'));
   }

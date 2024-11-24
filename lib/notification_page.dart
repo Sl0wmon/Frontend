@@ -10,6 +10,8 @@ import 'package:slomon/replacementCycle.dart';
 import 'myPage.dart';
 
 class NotificationPage extends StatefulWidget {
+  const NotificationPage({super.key});
+
   @override
   _NotificationPageState createState() => _NotificationPageState();
 }
@@ -54,10 +56,10 @@ class _NotificationPageState extends State<NotificationPage> {
   Widget _buildDrawerItem(
       BuildContext context, String title, IconData icon, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon, color: Color(0xFF8CD8B4)),
+      leading: Icon(icon, color: const Color(0xFF8CD8B4)),
       title: Text(
         title,
-        style: TextStyle(fontFamily: 'body'),
+        style: const TextStyle(fontFamily: 'body'),
       ),
       onTap: onTap,
     );
@@ -66,7 +68,7 @@ class _NotificationPageState extends State<NotificationPage> {
   double _getAdaptiveFontSize(BuildContext context, double size) {
     final screenSize = MediaQuery.of(context).size;
     final aspectRatio = screenSize.width / screenSize.height;
-    final baseAspectRatio = 375.0 / 667.0;
+    const baseAspectRatio = 375.0 / 667.0;
     return size * (aspectRatio / baseAspectRatio) *
         MediaQuery.of(context).textScaleFactor;
   }
@@ -83,7 +85,7 @@ class _NotificationPageState extends State<NotificationPage> {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Color(0xFF8CD8B4),
             ),
             child: Column(
@@ -97,14 +99,14 @@ class _NotificationPageState extends State<NotificationPage> {
                     fontFamily: 'head',
                   ),
                 ),
-                SizedBox(height: 40), // 사이드 메뉴와 이름 간격 조정
+                const SizedBox(height: 40), // 사이드 메뉴와 이름 간격 조정
                 Row(
                   children: [
                     // 프로필 이미지 위치
                     Container(
                       width: 35,
                       height: 35,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         image: DecorationImage(
                           image: AssetImage('assets/images/profile.png'), // 이미지 경로 지정
@@ -112,7 +114,7 @@ class _NotificationPageState extends State<NotificationPage> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 10), // 이미지와 텍스트 간격 조정
+                    const SizedBox(width: 10), // 이미지와 텍스트 간격 조정
                     Expanded(
                       child: Text(
                         '$name님', // 이름 텍스트 표시
@@ -125,14 +127,14 @@ class _NotificationPageState extends State<NotificationPage> {
                       ),
                     ),
                     IconButton(
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.arrow_forward_ios,
                         color: Colors.white,
                         size: 20,
                       ),
                       onPressed: () {
                         Navigator.push(
-                            context, MaterialPageRoute(builder: (context) => MyPage())
+                            context, MaterialPageRoute(builder: (context) => const MyPage())
                         );
                       },
                     ),
@@ -144,40 +146,41 @@ class _NotificationPageState extends State<NotificationPage> {
           _buildDrawerItem(context, "대시보드", Icons.dashboard, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => DashboardPage())
+                context, MaterialPageRoute(builder: (context) => const DashboardPage())
             );
           }),
           _buildDrawerItem(context, "급발진 상황 기록", Icons.history, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => RecordPage()));
+                context, MaterialPageRoute(builder: (context) => const RecordPage()));
           }),
           _buildDrawerItem(context, "차량 부품 교체 주기", Icons.car_repair, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => ReplacementCyclePage()));
+                context, MaterialPageRoute(builder: (context) => const ReplacementCyclePage()));
           }),
           _buildDrawerItem(context, "OBD 진단 가이드", Icons.info, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => ObdGuidePage()));
+                context, MaterialPageRoute(builder: (context) => const ObdGuidePage()));
           }),
           _buildDrawerItem(context, "알림", Icons.notifications, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => NotificationPage()));
+                context, MaterialPageRoute(builder: (context) => const NotificationPage()));
           }),
         ],
       ),
     );
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: Builder(
           builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: Colors.grey),
+            icon: const Icon(Icons.menu, color: Colors.grey),
             onPressed: () {
               Scaffold.of(context).openDrawer();
             },
@@ -188,20 +191,20 @@ class _NotificationPageState extends State<NotificationPage> {
           style: TextStyle(
               fontSize: _getAdaptiveFontSize(context, 28),
               fontFamily: 'head',
-              color: Color(0xFF818585)
+              color: const Color(0xFF818585)
           ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
-        actions: [
+        actions: const [
           Icon(Icons.notifications, color: Colors.grey),
         ],
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(2),
+          preferredSize: const Size.fromHeight(2),
           child: Container(
             height: 7,
-            color: Color(0xFF8CD8B4),
+            color: const Color(0xFF8CD8B4),
           ),
         ),
       ),
@@ -212,11 +215,11 @@ class _NotificationPageState extends State<NotificationPage> {
           children: [
             Container(
               height: 0.0,
-              color: Color(0xFF8CD8B4), // 경계선 색상
+              color: const Color(0xFF8CD8B4), // 경계선 색상
             ),
             Expanded(
               child: Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -226,7 +229,7 @@ class _NotificationPageState extends State<NotificationPage> {
                         color: Colors.grey.withOpacity(0.5),
                         spreadRadius: 2,
                         blurRadius: 5,
-                        offset: Offset(0, 3), // 그림자 위치
+                        offset: const Offset(0, 3), // 그림자 위치
                       ),
                     ],
                   ),
@@ -235,21 +238,21 @@ class _NotificationPageState extends State<NotificationPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           '알림 내용',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 4.0), // 텍스트와 선 사이 간격
+                        const SizedBox(height: 4.0), // 텍스트와 선 사이 간격
                         Container(
                           height: 2.0,
-                          color: Color(0xFF8CD8B4),
+                          color: const Color(0xFF8CD8B4),
                           width: 40.0, // 텍스트 길이에 맞추기 위해 고정 폭 설정
                         ),
-                        SizedBox(height: 16.0), // 선과 다른 내용 사이의 간격
-                        Expanded(
+                        const SizedBox(height: 16.0), // 선과 다른 내용 사이의 간격
+                        const Expanded(
                           child: Center(
                             child: Text(
                               '여기에 알림 내용이 표시됩니다.',

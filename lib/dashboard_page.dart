@@ -9,6 +9,8 @@ import 'dart:async';
 
 
 class DashboardPage extends StatefulWidget {
+  const DashboardPage({super.key});
+
   @override
   _DashboardPageState createState() => _DashboardPageState();
 }
@@ -41,7 +43,7 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     fetchData();
-    timer = Timer.periodic(Duration(seconds: 1), (Timer t) => fetchData());
+    timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => fetchData());
     fetchUserInfo();  // 사용자 정보를 가져오는 함수 호출
   }
 
@@ -54,7 +56,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Color colorFromHex(String hexColor) {
     hexColor = hexColor.replaceAll('#', '');
     if (hexColor.length == 6) {
-      hexColor = 'FF' + hexColor;
+      hexColor = 'FF$hexColor';
     }
     return Color(int.parse('0x$hexColor'));
   }
@@ -126,7 +128,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   String formatTime(List<dynamic> timeData) {
-    if (timeData == null || timeData.length < 3) {
+    if (timeData.length < 3) {
       return '0:00:00';
     }
     int hours = timeData[0] ?? 0;
@@ -137,8 +139,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Color _getCardColor(String title, [double value = 0]) {
     // 기본 색상과 기준값을 초과할 때의 색상 설정
-    Color defaultColor = Color(0xFF8CD8B4);
-    Color alertColor = Color(0xFFF39393);
+    Color defaultColor = const Color(0xFF8CD8B4);
+    Color alertColor = const Color(0xFFF39393);
 
     switch (title) {
       case '속도':
@@ -160,7 +162,7 @@ class _DashboardPageState extends State<DashboardPage> {
   double _getAdaptiveFontSize(BuildContext context, double size) {
     final screenSize = MediaQuery.of(context).size;
     final aspectRatio = screenSize.width / screenSize.height;
-    final baseAspectRatio = 375.0 / 667.0;
+    const baseAspectRatio = 375.0 / 667.0;
     return size * (aspectRatio / baseAspectRatio) *
         MediaQuery.of(context).textScaleFactor;
   }
@@ -178,12 +180,12 @@ class _DashboardPageState extends State<DashboardPage> {
           style: TextStyle(
             fontSize: _getAdaptiveFontSize(context, 28),
             fontFamily: 'head',
-            color: Color(0xFF818585),
+            color: const Color(0xFF818585),
           ),
         ),
         leading: Builder(
           builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: Colors.grey),
+            icon: const Icon(Icons.menu, color: Colors.grey),
             onPressed: () {
               Scaffold.of(context).openDrawer();
             },
@@ -195,7 +197,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ? _buildLoadingIndicator()
           : Column(
         children: [
-          Divider(
+          const Divider(
             color: Color(0xFF8CD8B4),
             thickness: 7,
           ),
@@ -207,7 +209,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildLoadingIndicator() {
-    return Center(
+    return const Center(
       child: CircularProgressIndicator(),
     );
   }
@@ -232,14 +234,14 @@ class _DashboardPageState extends State<DashboardPage> {
                     fontFamily: 'head',
                   ),
                 ),
-                SizedBox(height: 40), // 사이드 메뉴와 이름 간격 조정
+                const SizedBox(height: 40), // 사이드 메뉴와 이름 간격 조정
                 Row(
                   children: [
                     // 프로필 이미지 위치
                     Container(
                       width: 35,
                       height: 35,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         image: DecorationImage(
                           image: AssetImage('assets/images/profile.png'), // 이미지 경로 지정
@@ -247,7 +249,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 10), // 이미지와 텍스트 간격 조정
+                    const SizedBox(width: 10), // 이미지와 텍스트 간격 조정
                     Expanded(
                       child: Text(
                         '$name님', // 이름 텍스트 표시
@@ -260,7 +262,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
                     IconButton(
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.arrow_forward_ios,
                         color: Colors.white,
                         size: 20,
@@ -277,28 +279,29 @@ class _DashboardPageState extends State<DashboardPage> {
           _buildDrawerItem(context, "대시보드", Icons.dashboard, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => DashboardPage())
+                context, MaterialPageRoute(builder: (context) => const DashboardPage())
             );
           }),
           _buildDrawerItem(context, "급발진 상황 기록", Icons.history, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => RecordPage()));
+                context, MaterialPageRoute(builder: (context) => const RecordPage()));
           }),
           _buildDrawerItem(context, "차량 부품 교체 주기", Icons.car_repair, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => ReplacementCyclePage()));
+                context, MaterialPageRoute(builder: (context) => const ReplacementCyclePage()));
           }),
           _buildDrawerItem(context, "OBD 진단 가이드", Icons.info, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => ObdGuidePage()));
+              context, MaterialPageRoute(builder: (context) => const ObdGuidePage())
+            );
           }),
           _buildDrawerItem(context, "알림", Icons.notifications, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => NotificationPage()));
+                context, MaterialPageRoute(builder: (context) => const NotificationPage()));
           }),
         ],
       ),
@@ -311,7 +314,7 @@ class _DashboardPageState extends State<DashboardPage> {
       leading: Icon(icon, color: colorFromHex('#8CD8B4')),
       title: Text(
         title,
-        style: TextStyle(fontFamily: 'body'),
+        style: const TextStyle(fontFamily: 'body'),
       ),
       onTap: onTap,
     );
@@ -328,7 +331,7 @@ class _DashboardPageState extends State<DashboardPage> {
             // 첫 번째 GridView
             GridView.count(
               shrinkWrap: true, // 부모 위젯 높이에 맞춰 GridView 축소
-              physics: NeverScrollableScrollPhysics(), // GridView 자체 스크롤 비활성화
+              physics: const NeverScrollableScrollPhysics(), // GridView 자체 스크롤 비활성화
               crossAxisCount: 2,
               childAspectRatio: cardWidth / cardHeight,
               crossAxisSpacing: 8, // 간격 조정
@@ -354,11 +357,11 @@ class _DashboardPageState extends State<DashboardPage> {
                     isLargeFont: true, valueData: double.parse(intakePressure)),
               ],
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             // 두 번째 GridView
             GridView.count(
               shrinkWrap: true, // 부모 위젯 높이에 맞춰 GridView 축소
-              physics: NeverScrollableScrollPhysics(), // GridView 자체 스크롤 비활성화
+              physics: const NeverScrollableScrollPhysics(), // GridView 자체 스크롤 비활성화
               crossAxisCount: 3,
               childAspectRatio: cardWidth / cardHeight,
               crossAxisSpacing: 16, // 간격 조정
@@ -387,7 +390,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildCardSingleLine(
       String title, String value, double cardWidth, double cardHeight,
       {bool isLargeFont = false, double? valueData}) {
-    return Container(
+    return SizedBox(
       width: cardWidth,
       height: cardHeight,
       child: Column(
@@ -402,10 +405,10 @@ class _DashboardPageState extends State<DashboardPage> {
                   style: TextStyle(
                     fontSize: _getAdaptiveFontSize(context, 16),
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF6B6C6C),
+                    color: const Color(0xFF6B6C6C),
                   ),
                 ),
-                Divider(
+                const Divider(
                   color: Color(0xFF8CD8B4),
                   thickness: 4,
                   indent: 50,
@@ -418,7 +421,7 @@ class _DashboardPageState extends State<DashboardPage> {
           Card(
             color: _getCardColor(title, valueData ?? 0),
             elevation: 4,
-            margin: EdgeInsets.all(3),
+            margin: const EdgeInsets.all(3),
             child: Container(
               width: double.infinity,
               height: cardHeight - 20,
@@ -432,7 +435,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       width: cardWidth * 0.8,
                       height: 17,
                       decoration: BoxDecoration(
-                        color: Color(0xFFE2FFF1),
+                        color: const Color(0xFFE2FFF1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: FractionallySizedBox(
@@ -440,7 +443,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         widthFactor: double.parse(value.split(" ")[0]) / 130,
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Color(0xFFEA7B7B),
+                            color: const Color(0xFFEA7B7B),
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
@@ -452,7 +455,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       width: 50,
                       height: 40,
                     ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text.rich(
                     TextSpan(
                       text: value.split(" ")[0],
@@ -467,7 +470,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         TextSpan(
                           text: " ${value.split(" ")[1]}",
                           style: TextStyle(
-                            color: Color(0xFFE2FFF1),
+                            color: const Color(0xFFE2FFF1),
                             fontSize: isLargeFont
                                 ? _getAdaptiveFontSize(context, 17)
                                 : _getAdaptiveFontSize(context, 16),
@@ -531,7 +534,7 @@ class _DashboardPageState extends State<DashboardPage> {
             TextSpan(
               text: match.group(3),
               style: TextStyle(
-                color: Color(0xFFE2FFF1), // 단위는 빨강
+                color: const Color(0xFFE2FFF1), // 단위는 빨강
                 fontSize: _getAdaptiveFontSize(context, 12),
               ),
             ),
@@ -555,10 +558,10 @@ class _DashboardPageState extends State<DashboardPage> {
                 style: TextStyle(
                   fontSize: _getAdaptiveFontSize(context, 14),
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF6B6C6C),
+                  color: const Color(0xFF6B6C6C),
                 ),
               ),
-              Divider(
+              const Divider(
                 color: Color(0xFF8CD8B4),
                 thickness: 4,
                 indent: 30,
@@ -592,4 +595,8 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
+
+
+
+
 }

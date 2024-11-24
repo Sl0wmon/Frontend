@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class RegisterReplacePage extends StatefulWidget {
+  const RegisterReplacePage({super.key});
+
   @override
   _ReplacementCyclePageState createState() => _ReplacementCyclePageState();
 }
@@ -53,7 +55,7 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Text(
+          icon: const Text(
             '<',
             style: TextStyle(
               fontSize: 24,
@@ -65,7 +67,7 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
         ),
-        title: Text(
+        title: const Text(
           '부품 교체 기간 설정',
           style: TextStyle(
             fontWeight: FontWeight.bold,
@@ -83,9 +85,9 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
             children: [
               Container(
                 height: 7.0,
-                color: Color(0xFF8CD8B4),
+                color: const Color(0xFF8CD8B4),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
 
               ...parts.map((part) => Padding(
                 padding: const EdgeInsets.symmetric(
@@ -97,13 +99,13 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
                   children: [
                     Text(
                       part,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Theme(
                       data: Theme.of(context).copyWith(
                         canvasColor: Colors.grey[300], // 드롭다운 메뉴 배경색
@@ -128,22 +130,22 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
                             borderSide: BorderSide.none, // 테두리 제거
                             borderRadius: BorderRadius.circular(10), // 모서리 둥글게
                           ),
-                          contentPadding: EdgeInsets.symmetric(
+                          contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 8,
                           ),
                         ),
-                        hint: Text("선택해주세요"),
-                        style: TextStyle(color: Colors.black87), // 텍스트 색상
+                        hint: const Text("선택해주세요"),
+                        style: const TextStyle(color: Colors.black87), // 텍스트 색상
                       ),
                     ),
                   ],
                 ),
-              )).toList(),
+              )),
 
               // "앞으로의 부품 교체 주기를 예측하기 위한 기록입니다." 문구 중앙 배치
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
                 child: Align(
                   alignment: Alignment.center,
                   child: Text(
@@ -168,13 +170,13 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
                       print("완료 버튼 눌림");
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF8CD8B4), // 버튼 배경색
-                      padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15), // 버튼 크기
+                      backgroundColor: const Color(0xFF8CD8B4), // 버튼 배경색
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15), // 버튼 크기
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20), // 둥근 버튼
                       ),
                     ),
-                    child: Text(
+                    child: const Text(
                       "완료",
                       style: TextStyle(
                         color: Colors.white, // 텍스트 색상
@@ -185,7 +187,7 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
                   ),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
             ],
           ),
         ),
