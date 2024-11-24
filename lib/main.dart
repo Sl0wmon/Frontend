@@ -5,6 +5,7 @@ import 'package:slomon/addCarInfo_page.dart';
 import 'record_page.dart';
 import 'dashboard_page.dart';
 import 'login_page.dart';
+import 'ble_page.dart'; // BLE 관련 페이지 추가
 import 'user_provider.dart';
 import 'car_provider.dart';
 import 'package:provider/provider.dart';
@@ -35,6 +36,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/record': (context) => RecordPage(),
         '/dashboard': (context) => DashboardPage(),
+        '/ble': (context) => BluetoothPage(), // BLE 페이지 라우트 추가
       },
     );
   }
