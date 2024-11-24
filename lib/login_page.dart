@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:convert';
 import 'dashboard_page.dart';
 import 'regist_page.dart';
 import 'http_service.dart';
-import 'dart:convert';
-import 'user_provider.dart'; // UserProvider를 import합니다.
+import 'user_provider.dart';
+import 'car_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -35,6 +36,12 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> fetchData() async {
+    // 아이디와 비밀번호가 null인 경우 처리
+    if (_userId == null || _password == null || _userId!.isEmpty || _password!.isEmpty) {
+      _showDialog("아이디와 비밀번호를 입력하세요.");
+      return;
+    }
+
     final loginData = {
       "userId": _userId,
       "pw": _password
@@ -43,12 +50,14 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final response = await HttpService().postRequest("user/login", loginData);
 
+      print("LoginData: $loginData");
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
         if (data['success'] == "true" && data['data'] == true) {
           final userInfoResponse = await HttpService().postRequest("user/view",
-              {"userId": _userId},
+            {"userId": _userId},
           );
 
           if (userInfoResponse.statusCode == 200) {
@@ -64,10 +73,37 @@ class _LoginPageState extends State<LoginPage> {
                 phoneNumber: userData['phoneNumber'],
               );
 
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const DashboardPage()),
+              // 차량 정보 조회 요청
+              final carInfoResponse = await HttpService().postRequest(
+                "car/view/user",
+                {"userId": _userId},
               );
+
+              if (carInfoResponse.statusCode == 200) {
+                final carInfo = jsonDecode(carInfoResponse.body);
+
+                if (carInfo['success'] == "true" && carInfo['data'] != null && carInfo['data'].isNotEmpty) {
+                  final carData = carInfo['data'][0]; // 첫 번째 차량 정보
+                  context.read<CarProvider>().setCarInfo(carData); // CarProvider에 차량 정보 저장
+                } else {
+                  // 빈 데이터일 경우 빈 문자열로 처리
+                  context.read<CarProvider>().setCarInfo({
+                    'carId': "",
+                    'manufacturer': "",
+                    'size': "",
+                    'model': "",
+                    'fuel': "",
+                    'displacement': "",
+                    'year': 0,
+                  });
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const DashboardPage()),
+                  );
+                }
+              } else {
+                _showDialog("차량 정보 조회 서버 오류가 발생했습니다.");
+              }
             } else {
               _showDialog("회원 정보를 가져오는 데 실패했습니다.");
             }
@@ -79,9 +115,12 @@ class _LoginPageState extends State<LoginPage> {
         }
       } else {
         _showDialog("서버 오류가 발생했습니다.");
+        int code = response.statusCode;
+        print("error code: $code");
       }
     } catch (e) {
       _showDialog("네트워크 오류가 발생했습니다.");
+      print("Error: $e");
     }
   }
 
@@ -168,7 +207,7 @@ class _LoginPageState extends State<LoginPage> {
                   return null;
                 },
                 onSaved: (value) {
-                  _userId = value; // userId로 수정
+                  _userId = value;
                 },
               ),
               const SizedBox(height: 16),
@@ -200,11 +239,11 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: colorFromHex('#8CD8B4'), // 버튼 색상
+                  backgroundColor: colorFromHex('#8CD8B4'),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12), // 버튼 가로 길이 조정
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
                 ),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
@@ -232,7 +271,7 @@ class _LoginPageState extends State<LoginPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const RegistPage()), // 회원가입 페이지로 이동
+                    MaterialPageRoute(builder: (context) => const RegistPage()),
                   );
                 },
                 child: Text(

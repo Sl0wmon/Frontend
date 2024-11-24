@@ -1,7 +1,6 @@
 // lib/main.dart
 
 import 'package:flutter/material.dart';
-import 'package:slomon/addCarInfo_page.dart';
 import 'record_page.dart';
 import 'dashboard_page.dart';
 import 'login_page.dart';

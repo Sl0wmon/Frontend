@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
-import 'http_service.dart';
 import 'package:http/http.dart' as http;
 
 class AddCarInfoPage extends StatefulWidget {
@@ -541,7 +540,6 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                       body: jsonEncode(requestData),
                     );
 
-                    final responseBody = jsonDecode(response.body);
                     var jsonData = json.decode(utf8.decode(response.bodyBytes));
 
                     // 응답 코드와 본문을 콘솔에 로그로 출력

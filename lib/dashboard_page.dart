@@ -290,7 +290,7 @@ class _DashboardPageState extends State<DashboardPage> {
           _buildDrawerItem(context, "차량 부품 교체 주기", Icons.car_repair, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => const ReplacementCyclePage()));
+                context, MaterialPageRoute(builder: (context) => ReplacementCyclePage()));
           }),
           _buildDrawerItem(context, "OBD 진단 가이드", Icons.info, () {
             Navigator.pop(context);
@@ -301,7 +301,7 @@ class _DashboardPageState extends State<DashboardPage> {
           _buildDrawerItem(context, "알림", Icons.notifications, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => const NotificationPage()));
+                context, MaterialPageRoute(builder: (context) => NotificationPage()));
           }),
         ],
       ),
