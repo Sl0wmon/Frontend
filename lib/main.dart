@@ -1,6 +1,3 @@
-// lib/main.dart
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:slomon/addCarInfo_page.dart';
 import 'package:slomon/myPage.dart';
@@ -10,6 +7,7 @@ import 'package:slomon/replacementCycle.dart';
 import 'record_page.dart';
 import 'dashboard_page.dart';
 import 'login_page.dart';
+import 'ble_page.dart'; // BLE 관련 페이지 추가
 
 void main() {
   runApp(MyApp());
@@ -23,10 +21,11 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.teal,
       ),
-      home: NotificationPage(),
+      home: BluetoothPage(),
       routes: {
         '/record': (context) => RecordPage(),
         '/dashboard': (context) => DashboardPage(),
+        '/ble': (context) => BluetoothPage(), // BLE 페이지 라우트 추가
       },
     );
   }

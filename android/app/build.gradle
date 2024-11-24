@@ -28,6 +28,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        //bluetooth
+        minSdkVersion 23
+        targetSdkVersion 33
     }
 
     buildTypes {
@@ -36,6 +39,18 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.debug
         }
+    }
+    buildscript {
+        dependencies {
+            classpath 'com.android.tools.build:gradle:8.1.0' // 최신 Gradle 버전
+        }
+    }
+
+    compileSdkVersion 34
+    namespace "com.example.flutter_bluetooth_serial"
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion 34
     }
 }
 
