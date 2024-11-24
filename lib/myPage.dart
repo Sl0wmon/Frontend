@@ -36,7 +36,7 @@ class _MyPageState extends State<MyPage> {
   // 서버에서 데이터를 받아오는 함수
   Future<void> fetchUserInfo() async {
     try {
-      final url = Uri.parse('http://172.30.78.141:8080/api/user/view');
+      final url = Uri.parse('http://192.168.45.134:8080/api/user/view');
 
       // JSON 데이터를 POST 요청에 포함
       final response = await http.post(
@@ -66,7 +66,7 @@ class _MyPageState extends State<MyPage> {
   }
 
   Future<void> deleteCar() async {
-    final url = Uri.parse('http://172.30.78.141:8080/api/car/delete');
+    final url = Uri.parse('http://192.168.45.134:8080/api/car/delete');
     final headers = {'Content-Type': 'application/json'};
     final body = jsonEncode({
       'userId': userData['userId'],
@@ -100,7 +100,7 @@ class _MyPageState extends State<MyPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://172.30.78.141:8080/api/car/view/user'),
+        Uri.parse('http://192.168.45.134:8080/api/car/view/user'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"userId": "kchh0925"}), // 사용자 ID로 차량 정보 조회
       );

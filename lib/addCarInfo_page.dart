@@ -29,7 +29,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
 
   Future<void> fetchUserInfo() async {
     try {
-      final url = Uri.parse('http://172.30.78.141:8080/api/user/view');
+      final url = Uri.parse('http://192.168.45.134:8080/api/user/view');
 
       final response = await http.post(
         url,
@@ -497,7 +497,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
 
                   try {
                     final response = await http.post(
-                      Uri.parse("http://172.30.78.141:8080/api/car/add"),
+                      Uri.parse("http://192.168.45.134:8080/api/car/add"),
                       headers: {"Content-Type": "application/json"},
                       body: jsonEncode(requestData),
                     );

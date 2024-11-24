@@ -38,7 +38,7 @@ class _RecordPageState extends State<RecordPage> {
 
   Future<void> fetchUserInfo() async {
     try {
-      final url = Uri.parse('http://172.30.78.141:8080/api/user/view');
+      final url = Uri.parse('http://192.168.45.134:8080/api/user/view');
 
       final response = await http.post(
         url,
@@ -118,7 +118,7 @@ class _RecordPageState extends State<RecordPage> {
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(2),
           child: Container(
-            height: 2,
+            height: 7,
             color: colorFromHex('#8CD8B4'),
           ),
         ),
