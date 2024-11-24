@@ -63,7 +63,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> fetchUserInfo() async {
     try {
-      final url = Uri.parse('http://172.30.78.141:8080/api/user/view');
+      final url = Uri.parse('http://192.168.45.134:8080/api/user/view');
 
       final response = await http.post(
         url,
@@ -92,7 +92,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
 
   Future<void> fetchData() async {
-    final url = Uri.parse('http://172.30.78.141:8080/api/dashboard/view');
+    final url = Uri.parse('http://192.168.45.134:8080/api/dashboard/view');
     final response = await http.post(url,
         body: jsonEncode({"userId": "test"}),
         headers: {"Content-Type": "application/json"});

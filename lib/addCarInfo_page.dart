@@ -65,7 +65,14 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
 
   Future<void> fetchUserInfo() async {
     try {
-      final response = await HttpService().postRequest("user/view", userData);
+      final url = Uri.parse('http://192.168.45.134:8080/api/user/view');
+
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"userId": "kchh0925"}),
+      );
+      //final response = await HttpService().postRequest("user/view", userData);
 
       if (response.statusCode == 200) {
         // UTF-8 디코딩
@@ -92,7 +99,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Text(
+          icon: Text(
             '<', // 뒤로 가기 버튼 모양
             style: TextStyle(
               fontSize: 24,
@@ -106,7 +113,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
           splashColor: Colors.transparent, // 클릭 시 물결 효과 제거
           highlightColor: Colors.transparent, // 클릭 시 강조 효과 제거
         ),
-        title: const Text(
+        title: Text(
           '개인페이지', // 타이틀 수정
           style: TextStyle(
             fontWeight: FontWeight.bold,
@@ -121,7 +128,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 제조사 선택
-            const Text(
+            Text(
               "제조사",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
@@ -132,10 +139,10 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
               ),
               child: DropdownButton<String?>(
                 value: selectedManufacturer,
-                hint: const Text("선택 1"),
+                hint: Text("선택 1"),
                 isExpanded: true,
-                underline: const SizedBox(),
-                items:  [null, '현대', '기아', 'KGM', '쉐보레', '르노', '대우','제네시스', 'BMW', '벤츠', '아우디' ]
+                underline: SizedBox(),
+                items:  [null, '현대', '기아', 'KGM', 'gm(쉐보레, 캐딜락, 사브, 뷰익)', '르노코리아', '대우','제네시스', 'BMW', '벤츠', '아우디' ]
                     .map<DropdownMenuItem<String?>>((String? i) {
                   return DropdownMenuItem<String?>(
                     value: i,
@@ -185,10 +192,10 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                 },
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // 차급 선택
-            const Text(
+            Text(
               "차급",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
@@ -199,9 +206,9 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
               ),
               child: DropdownButton<String?>(
                 value: carTypeOptions.contains(selectedCarType) ? selectedCarType : null,
-                hint: const Text("선택 2"),
+                hint: Text("선택 2"),
                 isExpanded: true,
-                underline: const SizedBox(),
+                underline: SizedBox(),
                 items: carTypeOptions.toSet().toList().map<DropdownMenuItem<String?>>((String i) {
                   return DropdownMenuItem<String?>(
                     value: i,
@@ -346,10 +353,10 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                 },
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // 외형 선택
-            const Text(
+            Text(
               "외형",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
@@ -360,9 +367,9 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
               ),
               child: DropdownButton<String?>(
                 value: exteriorOptions.contains(selectedFuelType) ? selectedFuelType : null,
-                hint: const Text("선택 3"),
+                hint: Text("선택 3"),
                 isExpanded: true,
-                underline: const SizedBox(),
+                underline: SizedBox(),
                 items: exteriorOptions.toSet().toList().map<DropdownMenuItem<String?>>((String i) {
                   return DropdownMenuItem<String?>(
                     value: i,
@@ -379,10 +386,10 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                 },
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // 연료 선택
-            const Text(
+            Text(
               "연료",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
@@ -393,9 +400,9 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
               ),
               child: DropdownButton<String?>(
                 value: selectedCarColor,
-                hint: const Text("선택 4"),
+                hint: Text("선택 4"),
                 isExpanded: true,
-                underline: const SizedBox(),
+                underline: SizedBox(),
                 items: [null, '1.0L', '1.2L', '1.4L', '1.6L', '1.8L', '2.0L', '2.2L', '2.5L', '2.8L', '3.0L', '3.5L', '4.0L', '5.0L', '6.0L 이상']
                     .map<DropdownMenuItem<String?>>((String? i) {
                   return DropdownMenuItem<String?>(
@@ -413,9 +420,9 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                 },
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
-            const Text(
+            Text(
               "배기량",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
@@ -426,9 +433,9 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
               ),
               child: DropdownButton<String?>(
                 value: selectedEngineCapacity,
-                hint: const Text("선택 4"),
+                hint: Text("선택 4"),
                 isExpanded: true,
-                underline: const SizedBox(),
+                underline: SizedBox(),
                 items: [null, '1000cc', '1500cc', '2000cc', '2500cc', '3000cc']
                     .map<DropdownMenuItem<String?>>((String? i) {
                   return DropdownMenuItem<String?>(
@@ -446,9 +453,9 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                 },
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
-            const Text(
+            Text(
               "연식",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
@@ -468,7 +475,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                         FilteringTextInputFormatter.digitsOnly, // 숫자만 입력 가능
                         LengthLimitingTextInputFormatter(4), // 4글자 제한
                       ],
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: '연식을 입력하세요',
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
@@ -481,8 +488,8 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                       },
                     ),
                   ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     child: Text(
                       '년',
                       style: TextStyle(fontWeight: FontWeight.bold), // '년' 글자에 굵은 글씨 스타일 적용
@@ -492,16 +499,16 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
               ),
             ),
             if (selectedCarYear != null && selectedCarYear!.length < 4 && selectedCarYear!.isNotEmpty)
-              const Padding(
-                padding: EdgeInsets.only(top: 8.0),
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
                   '연식은 4자리로 입력해주세요.',
                   style: TextStyle(color: Colors.red, fontSize: 12),
                 ),
               ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
-            const Spacer(),
+            Spacer(),
 
             // 등록 버튼
             Center(
@@ -509,11 +516,11 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                 onPressed: () async {
                   if ([selectedManufacturer, selectedCarType, selectedFuelType, selectedCarYear].contains(null)) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('모든 필드를 입력해주세요!')),
+                      SnackBar(content: Text('모든 필드를 입력해주세요!')),
                     );
                     return;
                   }
-                  
+
                   final parsedManufacturer = parseManufacturer(selectedManufacturer);
 
                   final requestData = {
@@ -561,13 +568,13 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8CD8B4), // 버튼 배경색
-                  minimumSize: const Size(200, 50), // 버튼 크기 조정
+                  backgroundColor: Color(0xFF8CD8B4), // 버튼 배경색
+                  minimumSize: Size(200, 50), // 버튼 크기 조정
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12), // 버튼 모서리 둥글게
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   "등록",
                   style: TextStyle(
                     fontSize: 18,

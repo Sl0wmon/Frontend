@@ -11,8 +11,6 @@ import 'obd_guide_page.dart';
 
 
 class ReplacementCyclePage extends StatefulWidget {
-  const ReplacementCyclePage({super.key});
-
   @override
   _ReplacementCyclePageState createState() => _ReplacementCyclePageState();
 }
@@ -22,9 +20,9 @@ class ReplacementCyclePage extends StatefulWidget {
 class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
   // 각 박스의 데이터를 리스트로 관리
   final List<Map<String, dynamic>> boxData = [
-    {'title': '엔진 오일', 'remainingDistance': '300.10km', 'lastReplacement': '2024-01-10', 'widthFactor': 0.21},
-    {'title': '미션오일', 'remainingDistance': '250.50km', 'lastReplacement': '2024-03-15', 'widthFactor': 0.3},
-    {'title': '브레이크', 'remainingDistance': '500.75km', 'lastReplacement': '2024-05-20', 'widthFactor': 0.4},
+    {'title': '엔진 오일', 'remainingDistance': '300.10km', 'lastReplacement': '2024-01-10', 'widthFactor': 1.0},
+    {'title': '미션오일', 'remainingDistance': '250.50km', 'lastReplacement': '2024-03-15', 'widthFactor': 0.2},
+    {'title': '브레이크', 'remainingDistance': '500.75km', 'lastReplacement': '2024-05-20', 'widthFactor': 1.0},
     {'title': '클러치', 'remainingDistance': '150.30km', 'lastReplacement': '2024-06-25', 'widthFactor': 0.5},
     {'title': '파워스티어링', 'remainingDistance': '220.90km', 'lastReplacement': '2024-07-10', 'widthFactor': 0.6},
     {'title': '냉각수', 'remainingDistance': '400.50km', 'lastReplacement': '2024-08-18', 'widthFactor': 0.7},
@@ -45,20 +43,61 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
   String name = ""; // 이름 변수
   String phone = ""; // 이름 변수
 
-  double _getAdaptiveFontSize(BuildContext context, double size) {
-    final screenSize = MediaQuery.of(context).size;
-    final aspectRatio = screenSize.width / screenSize.height;
-    const baseAspectRatio = 375.0 / 667.0;
-    return size * (aspectRatio / baseAspectRatio) *
-        MediaQuery.of(context).textScaleFactor;
+  Future<void> addNotification(String userId, String title) async {
+    try {
+      final url = Uri.parse('http://192.168.45.134:8080/api/notification/add');
+      final notificationData = {
+        "userId": userId,
+        "notificationTime": DateTime.now().toIso8601String(), // 현재 시간
+        "code": null,
+        "title": "$title의 부품 교체 주기 100% 달성!",
+        "content": "$title를 교체 해 주세요!"
+      };
+
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(notificationData),
+      );
+
+      if (response.statusCode == 201) {
+        print('Notification added successfully.');
+      } else {
+        print('Failed to add notification. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error adding notification: $e');
+    }
   }
 
   @override
   void initState() {
     super.initState();
     fetchUserInfo();
-    // 페이지 로드 시 데이터 가져오기
+
+    // 부품 데이터를 초기 확인하여 알림 등록
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      checkReplacementCycles();
+    });
   }
+
+  void checkReplacementCycles() {
+    for (var box in boxData) {
+      if (box['widthFactor'] >= 1.0) {
+        addNotification(userData['userId'], box['title']);
+      }
+    }
+  }
+
+
+  double _getAdaptiveFontSize(BuildContext context, double size) {
+    final screenSize = MediaQuery.of(context).size;
+    final aspectRatio = screenSize.width / screenSize.height;
+    final baseAspectRatio = 375.0 / 667.0;
+    return size * (aspectRatio / baseAspectRatio) *
+        MediaQuery.of(context).textScaleFactor;
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +105,7 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
       appBar: AppBar(
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.grey),
+            icon: Icon(Icons.menu, color: Colors.grey),
             onPressed: () {
               Scaffold.of(context).openDrawer();
             },
@@ -77,20 +116,20 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
           style: TextStyle(
               fontSize: _getAdaptiveFontSize(context, 28),
               fontFamily: 'head',
-              color: const Color(0xFF818585)
+              color: Color(0xFF818585)
           ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
-        actions: const [
+        actions: [
           Icon(Icons.notifications, color: Colors.grey),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(2),
+          preferredSize: Size.fromHeight(2),
           child: Container(
             height: 7,
-            color: const Color(0xFF8CD8B4),
+            color: Color(0xFF8CD8B4),
           ),
         ),
       ),
@@ -103,10 +142,10 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
               // 경계선
               Container(
                 height: 0.0,
-                color: const Color(0xFF8CD8B4), // 경계선 색상
+                color: Color(0xFF8CD8B4), // 경계선 색상
               ),
               // 경계선과 박스 사이의 공간 추가
-              const SizedBox(height: 20), // 경계선과 박스 사이의 간격
+              SizedBox(height: 20), // 경계선과 박스 사이의 간격
 
               // 연두색 박스들
               for (var box in boxData) ...[
@@ -116,7 +155,7 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
                   lastReplacement: box['lastReplacement'],
                   widthFactor: box['widthFactor'],
                 ),
-                const SizedBox(height: 20), // 박스 간 간격 추가
+                SizedBox(height: 20), // 박스 간 간격 추가
               ],
             ],
           ),
@@ -126,7 +165,7 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
   }
   Future<void> fetchUserInfo() async {
     try {
-      final url = Uri.parse('http://172.30.78.141:8080/api/user/view');
+      final url = Uri.parse('http://192.168.45.134:8080/api/user/view');
 
       final response = await http.post(
         url,
@@ -159,7 +198,7 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFF8CD8B4),
             ),
             child: Column(
@@ -173,14 +212,14 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
                     fontFamily: 'head',
                   ),
                 ),
-                const SizedBox(height: 40), // 사이드 메뉴와 이름 간격 조정
+                SizedBox(height: 40), // 사이드 메뉴와 이름 간격 조정
                 Row(
                   children: [
                     // 프로필 이미지 위치
                     Container(
                       width: 35,
                       height: 35,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         image: DecorationImage(
                           image: AssetImage('assets/images/profile.png'), // 이미지 경로 지정
@@ -188,7 +227,7 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10), // 이미지와 텍스트 간격 조정
+                    SizedBox(width: 10), // 이미지와 텍스트 간격 조정
                     Expanded(
                       child: Text(
                         '$name님', // 이름 텍스트 표시
@@ -201,14 +240,14 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.arrow_forward_ios,
                         color: Colors.white,
                         size: 20,
                       ),
                       onPressed: () {
                         Navigator.push(
-                            context, MaterialPageRoute(builder: (context) => const MyPage())
+                            context, MaterialPageRoute(builder: (context) => MyPage())
                         );
                       },
                     ),
@@ -220,27 +259,27 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
           _buildDrawerItem(context, "대시보드", Icons.dashboard, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => const DashboardPage())
+                context, MaterialPageRoute(builder: (context) => DashboardPage())
             );
           }),
           _buildDrawerItem(context, "급발진 상황 기록", Icons.history, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => const RecordPage()));
+                context, MaterialPageRoute(builder: (context) => RecordPage()));
           }),
           _buildDrawerItem(context, "차량 부품 교체 주기", Icons.car_repair, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => const ReplacementCyclePage()));
+                context, MaterialPageRoute(builder: (context) => ReplacementCyclePage()));
           }),
           _buildDrawerItem(context, "OBD 진단 가이드", Icons.info, () {
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => const ObdGuidePage()));
+                context, MaterialPageRoute(builder: (context) => ObdGuidePage()));
           }),
           _buildDrawerItem(context, "알림", Icons.notifications, () {
             Navigator.pop(context);
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => const NotificationPage()));
+                context, MaterialPageRoute(builder: (context) => NotificationPage()));
           }),
         ],
       ),
@@ -250,10 +289,10 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
   Widget _buildDrawerItem(
       BuildContext context, String title, IconData icon, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon, color: const Color(0xFF8CD8B4)),
+      leading: Icon(icon, color: Color(0xFF8CD8B4)),
       title: Text(
         title,
-        style: const TextStyle(fontFamily: 'body'),
+        style: TextStyle(fontFamily: 'body'),
       ),
       onTap: onTap,
     );
@@ -266,88 +305,92 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
     required String lastReplacement,
     required double widthFactor,
   }) {
+    if (widthFactor >= 1.0) {
+      // 알림 추가 로직 호출
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        addNotification(userData['userId'], title);
+      });
+    }
+
     return Container(
-      width: 350, // 박스의 가로 크기 증가
-      padding: const EdgeInsets.all(16.0),
+      width: 350,
+      padding: EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: const Color(0xFF8CD8B4), // 연두색
+        color: Color(0xFF8CD8B4), // 연두색
         borderRadius: BorderRadius.circular(20.0), // 둥근 모서리
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 상단 행(Row)으로 배치: 제목 박스 + 잔여 주행거리 텍스트
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween, // 두 위젯 간의 공간을 균등하게 배분
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // 상단 흰 박스 (제목)
               Container(
                 width: 130,
-                padding: const EdgeInsets.all(8.0),
+                padding: EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(30.0),
                 ),
-                alignment: Alignment.center, // 텍스트를 중앙에 배치
+                alignment: Alignment.center,
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
                     fontFamily: 'head',
-                    letterSpacing: 1.2, // 글자 간 간격을 1.2로 설정
+                    letterSpacing: 1.2,
                   ),
                 ),
               ),
-              // 잔여 주행거리와 마지막 교체 텍스트
               Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Text(
+                      Text(
                         '잔여 주행거리: ',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF696C6C),
                           fontFamily: 'body',
-                          letterSpacing: 1.2, // 글자 간 간격을 1.2로 설정
+                          letterSpacing: 1.2,
                         ),
                       ),
                       Text(
                         remainingDistance,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                           fontFamily: 'body',
-                          letterSpacing: 1.2, // 글자 간 간격을 1.2로 설정
+                          letterSpacing: 1.2,
                         ),
                       ),
                     ],
                   ),
                   Row(
                     children: [
-                      const Text(
+                      Text(
                         '마지막 교체: ',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF696C6C),
                           fontFamily: 'body',
-                          letterSpacing: 1.2, // 글자 간 간격을 1.2로 설정
+                          letterSpacing: 1.2,
                         ),
                       ),
                       Text(
                         lastReplacement,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                           fontFamily: 'body',
-                          letterSpacing: 1.2, // 글자 간 간격을 1.2로 설정
+                          letterSpacing: 1.2,
                         ),
                       ),
                     ],
@@ -356,9 +399,8 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
               ),
             ],
           ),
-          const SizedBox(height: 8), // 두 텍스트 간의 간격 조정
-          const SizedBox(height: 16),
-          // 가로로 긴 막대 그래프
+          SizedBox(height: 8),
+          SizedBox(height: 16),
           Container(
             height: 10.0,
             width: double.infinity,
@@ -368,24 +410,23 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
             ),
             child: FractionallySizedBox(
               alignment: Alignment.centerLeft,
-              widthFactor: widthFactor, // widthFactor를 동적으로 사용
+              widthFactor: widthFactor,
               child: Container(
                 decoration: BoxDecoration(
                   color: widthFactor >= 0.8
-                      ? const Color(0xFFFF7E7E) // widthFactor가 0.8 이상일 경우 색상 변경
-                      : const Color(0xFF60BF92), // 기본 색상 (연두색 계열)
+                      ? Color(0xFFFF7E7E)
+                      : Color(0xFF60BF92),
                   borderRadius: BorderRadius.circular(5.0),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 1), // 그래프와 텍스트 간의 간격
-          // widthFactor 값과 % 표시
+          SizedBox(height: 1),
           Align(
-            alignment: Alignment.centerRight, // 오른쪽 정렬
+            alignment: Alignment.centerRight,
             child: Text(
-              '${(widthFactor * 100).toStringAsFixed(0)}%', // 퍼센트로 변환
-              style: const TextStyle(
+              '${(widthFactor * 100).toStringAsFixed(0)}%',
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -397,4 +438,5 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
       ),
     );
   }
+
 }

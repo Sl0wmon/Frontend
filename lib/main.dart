@@ -31,10 +31,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.teal,
       ),
-      home: const LoginPage(),
+      home: LoginPage(),
       routes: {
-        '/record': (context) => const RecordPage(),
-        '/dashboard': (context) => const DashboardPage(),
+        '/record': (context) => RecordPage(),
+        '/dashboard': (context) => DashboardPage(),
       },
     );
   }
