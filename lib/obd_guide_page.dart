@@ -5,6 +5,7 @@ import 'http_service.dart';
 import 'car_provider.dart';
 import 'user_provider.dart';
 import 'drawer_widget.dart';
+import 'guide_detail.dart';
 
 class ObdGuidePage extends StatefulWidget {
   const ObdGuidePage({super.key});
@@ -14,7 +15,7 @@ class ObdGuidePage extends StatefulWidget {
 }
 
 class _ObdGuidePageState extends State<ObdGuidePage> {
-  final List<Map<String, String>> diagnosticResults = [];
+  final List<Map<String, dynamic>> diagnosticResults = []; // errId 포함
   final TextEditingController _errCodeController = TextEditingController();
   String name = ""; // 이름 변수
   String carType = "";
@@ -22,23 +23,15 @@ class _ObdGuidePageState extends State<ObdGuidePage> {
   @override
   void initState() {
     super.initState();
-    // UserProvider에서 name 가져오기
     final user = Provider.of<UserProvider>(context, listen: false);
     final car = Provider.of<CarProvider>(context, listen: false);
+
     setState(() {
-      // name을 UTF-8로 디코딩하여 처리
       name = user.name?.isNotEmpty == true ? utf8.decode(user.name!.runes.toList()) : '';
       carType = car.manufacturer;
     });
-  }
 
-  double _getAdaptiveFontSize(BuildContext context, double size) {
-    final screenSize = MediaQuery.of(context).size;
-    final aspectRatio = screenSize.width / screenSize.height;
-    const baseAspectRatio = 375.0 / 667.0;
-    return size *
-        (aspectRatio / baseAspectRatio) *
-        MediaQuery.of(context).textScaleFactor;
+    _fetchAllDiagnosticResults();
   }
 
   Future<void> fetchData() async {
@@ -76,8 +69,9 @@ class _ObdGuidePageState extends State<ObdGuidePage> {
               }
 
               diagnosticResults.add({
-                "code": errCodeFromApi,
-                "description": description,
+                "id": item['errId'], // id는 그대로 추가
+                "code": errCodeFromApi, // 분리된 코드 부분 저장
+                "description": description, // 분리된 설명 부분 저장
               });
             }
           });
@@ -96,6 +90,59 @@ class _ObdGuidePageState extends State<ObdGuidePage> {
         diagnosticResults.clear();
       });
     }
+  }
+
+  Future<void> _fetchAllDiagnosticResults() async {
+    try {
+      final response = await HttpService().postRequest("guide/all", {"carType": carType});
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes)); // UTF-8 디코딩
+        if (data['success'] == "true") {
+          setState(() {
+            diagnosticResults.clear();
+            for (var item in data['data']) {
+              String errCodeFromApi = item['errCode'] ?? '알 수 없음';
+              String description = item['description'] ?? '설명 없음';
+
+              // 숫자+알파벳 코드와 설명 부분 분리
+              final codeMatch = RegExp(r'^([A-Z0-9, 또는]+)\s+(.+)$').firstMatch(errCodeFromApi);
+              if (codeMatch != null) {
+                errCodeFromApi = codeMatch.group(1)!.trim(); // 코드 부분
+                description = codeMatch.group(2)!.trim();   // 설명 부분
+              }
+
+              diagnosticResults.add({
+                "id": item['errId'], // id는 그대로 추가
+                "code": errCodeFromApi, // 분리된 코드 부분 저장
+                "description": description, // 분리된 설명 부분 저장
+              });
+            }
+          });
+        } else {
+          setState(() {
+            diagnosticResults.clear();
+          });
+        }
+      } else {
+        setState(() {
+          diagnosticResults.clear();
+        });
+      }
+    } catch (e) {
+      setState(() {
+        diagnosticResults.clear();
+      });
+    }
+  }
+
+  double _getAdaptiveFontSize(BuildContext context, double size) {
+    final screenSize = MediaQuery.of(context).size;
+    final aspectRatio = screenSize.width / screenSize.height;
+    const baseAspectRatio = 375.0 / 667.0;
+    return size *
+        (aspectRatio / baseAspectRatio) *
+        MediaQuery.of(context).textScaleFactor;
   }
 
   @override
@@ -170,28 +217,28 @@ class _ObdGuidePageState extends State<ObdGuidePage> {
               ),
             ),
           ),
-          // 진단 결과 리스트
           Expanded(
             child: ListView.builder(
               itemCount: diagnosticResults.length,
               itemBuilder: (context, index) {
+                final diagnosticItem = diagnosticResults[index];
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
                   padding: const EdgeInsets.all(8.0),
                   decoration: BoxDecoration(
-                    color: Colors.white, // 배경 색상을 흰색으로 설정
-                    borderRadius: BorderRadius.circular(8.0), // 모서리를 둥글게 설정
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8.0),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
                         blurRadius: 4,
-                        offset: const Offset(0, 2), // 살짝 아래쪽으로 그림자
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
                   child: ListTile(
                     title: Text(
-                      diagnosticResults[index]['code']!,
+                      diagnosticItem['code']!,
                       style: TextStyle(
                         fontFamily: 'body',
                         fontSize: _getAdaptiveFontSize(context, 22),
@@ -199,16 +246,62 @@ class _ObdGuidePageState extends State<ObdGuidePage> {
                       ),
                     ),
                     subtitle: Text(
-                      diagnosticResults[index]['description']!,
+                      diagnosticItem['description']!,
                       style: TextStyle(
                         fontFamily: 'body',
                         fontSize: _getAdaptiveFontSize(context, 18),
                       ),
                     ),
+                    onTap: () async {
+                      final errId = diagnosticItem['id']; // errId 가져오기
+                      try {
+                        // API 요청: 선택된 errId를 서버로 전송
+                        final response = await HttpService().postRequest("guide/detail", {
+                          "errId": errId, // errId 전달
+                        });
+
+                        if (response.statusCode == 200) {
+                          final data = jsonDecode(utf8.decode(response.bodyBytes));
+
+                          if (data['success'] == "true" && data['data'] != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => GuideDetailPage(
+                                  guideData: data, // 서버에서 받은 상세 정보 전달
+                                ),
+                              ),
+                            );
+                          } else {
+                            _showErrorDialog(context, "가이드 상세 정보를 찾을 수 없습니다.");
+                          }
+                        } else {
+                          _showErrorDialog(context, "서버 응답에 문제가 있습니다.");
+                        }
+                      } catch (e) {
+                        _showErrorDialog(context, "가이드 정보를 가져오는 중 오류가 발생했습니다.");
+                      }
+                    },
                   ),
                 );
               },
             ),
+          )
+        ],
+      ),
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("오류"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("확인"),
           ),
         ],
       ),

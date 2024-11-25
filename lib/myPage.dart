@@ -7,6 +7,7 @@ import 'car_provider.dart';
 import 'package:provider/provider.dart';
 import 'http_service.dart';
 import 'modify_car_info_page.dart';
+import 'update_user_page.dart';
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -164,14 +165,28 @@ class _MyPageState extends State<MyPage> {
                                 ),
                               ),
                               ElevatedButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  // update_user_page로 이동
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const UpdateUserPage()),
+                                  );
+                                },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF8CD8B4),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20.0),
                                   ),
                                 ),
-                                child: const Text("수정", style: TextStyle(fontFamily: 'body', color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17)),
+                                child: const Text(
+                                  "수정",
+                                  style: TextStyle(
+                                    fontFamily: 'body',
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 17,
+                                  ),
+                                ),
                               ),
                             ],
                           ),

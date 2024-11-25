@@ -28,4 +28,10 @@ class UserProvider with ChangeNotifier {
     _phoneNumber = null;
     notifyListeners();
   }
+
+  void updateUser(String? name, String? phoneNumber) {
+    _name = name;
+    _phoneNumber = phoneNumber;
+    notifyListeners();
+  }
 }
