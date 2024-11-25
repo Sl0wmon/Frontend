@@ -16,25 +16,24 @@ class _BluetoothPageState extends State<BluetoothPage> {
   List<BluetoothDevice> devices = [];
   bool isLoading = true;
   BluetoothConnection? connection;
-  Map<String, dynamic> lastParsedData = {
-    "Speed": "0.0",
-    "RPM": "0.0",
-    "CoolantTemp": "0.0",
-    "IntakeTemp": "0.0",
-    "EngineLoad": "0.0",
-    "IntakePressure": "0.0",
-    "PressureValues": {
-      "acc": "0",
-      "brk": "0",
-    },
-  };
 
   @override
   void initState() {
     super.initState();
     discoverDevices();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<DataProvider>(context, listen: false).updateData(lastParsedData);
+      Provider.of<DataProvider>(context, listen: false).updateData({
+        "Speed": "0.0",
+        "RPM": "0.0",
+        "CoolantTemp": "0.0",
+        "IntakeTemp": "0.0",
+        "EngineLoad": "0.0",
+        "IntakePressure": "0.0",
+        "PressureValues": {
+          "acc": "0",
+          "brk": "0",
+        },
+      });
     });
   }
 
@@ -97,7 +96,6 @@ class _BluetoothPageState extends State<BluetoothPage> {
       String bluetoothData = String.fromCharCodes(data).trim();
       Map<String, dynamic> parsedData = parseBluetoothData(bluetoothData);
       Provider.of<DataProvider>(context, listen: false).updateData(parsedData);
-      lastParsedData = parsedData;
       print("Received Bluetooth Data: $bluetoothData");
       print("Parsed Data: $parsedData");
     }, onError: (error) {
@@ -122,7 +120,18 @@ class _BluetoothPageState extends State<BluetoothPage> {
   }
 
   Map<String, dynamic> parseBluetoothData(String rawData) {
-    Map<String, dynamic> parsedData = Map.from(lastParsedData);
+    Map<String, dynamic> parsedData = {
+      "Speed": "0.0",
+      "RPM": "0.0",
+      "CoolantTemp": "0.0",
+      "IntakeTemp": "0.0",
+      "EngineLoad": "0.0",
+      "IntakePressure": "0.0",
+      "PressureValues": {
+        "acc": "0",
+        "brk": "0",
+      },
+    };
 
     List<String> pairs = rawData.split(", ");
 
@@ -166,34 +175,41 @@ class _BluetoothPageState extends State<BluetoothPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Bluetooth Devices'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.arrow_forward),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => DashboardPage()),
-              );
-            },
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: isLoading
+                ? Center(child: CircularProgressIndicator())
+                : devices.isEmpty
+                ? Center(child: Text("No devices found"))
+                : ListView.builder(
+              itemCount: devices.length,
+              itemBuilder: (context, index) {
+                final device = devices[index];
+                return ListTile(
+                  title: Text(device.name ?? "Unknown Device"),
+                  subtitle: Text(device.address),
+                  onTap: () {
+                    connectToDevice(device);
+                  },
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => DashboardPage()),
+                );
+              },
+              child: Text("Go to Another Page"),
+            ),
           ),
         ],
-      ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : devices.isEmpty
-          ? Center(child: Text("No devices found"))
-          : ListView.builder(
-        itemCount: devices.length,
-        itemBuilder: (context, index) {
-          final device = devices[index];
-          return ListTile(
-            title: Text(device.name ?? "Unknown Device"),
-            subtitle: Text(device.address),
-            onTap: () {
-              connectToDevice(device);
-            },
-          );
-        },
       ),
     );
   }

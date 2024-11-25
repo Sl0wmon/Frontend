@@ -19,19 +19,13 @@ import 'package:provider/provider.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => DataProvider(),
-      child: MyApp(),
-    ),
-  );
-  runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => UserProvider()), // UserProvider를 전역 상태로 등록
-        ChangeNotifierProvider(create: (_) => CarProvider()),  // CarProvider를 전역 상태로 등록
+        ChangeNotifierProvider(create: (_) => DataProvider()),
       ],
-      child: const MyApp(),
+      child: MyApp(),
     ),
+
   );
 }
 
