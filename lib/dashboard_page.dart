@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:slomon/http_service.dart';
 import 'package:slomon/user_provider.dart';
 import 'DataProvider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
-
+import 'drawer_widget.dart';
 import 'GaugePainter.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -17,6 +18,7 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   String name = ""; // 이름 변수
+  String userId = "";
   bool isLoading = false;
   Timer? timer;
 
@@ -25,6 +27,8 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
     final user = Provider.of<UserProvider>(context, listen: false); // listen: false로 값을 가져옴
     timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => fetchData());
+    name = user.name ?? "";
+    userId = user.userId ?? "";
   }
 
   @override
@@ -36,12 +40,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> fetchData() async {
     try {
-      final url = Uri.parse('http://192.168.45.134:8080/api/dashboard/view');
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({"userId": "kchh0925"}),
-      );
+      final response = await HttpService().postRequest("dashboard/view", {"userId": userId});
 
       if (response.statusCode == 200) {
         var jsonData = json.decode(response.body);
@@ -111,7 +110,10 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ),
       ),
-      drawer: _buildDrawer(context),
+      drawer: DrawerWidget(
+        name: name,
+        getAdaptiveFontSize: _getAdaptiveFontSize,
+      ),
       body: isLoading
           ? _buildLoadingIndicator()
           : Consumer<DataProvider>(
@@ -198,71 +200,6 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildLoadingIndicator() {
     return const Center(
       child: CircularProgressIndicator(),
-    );
-  }
-
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: const Color(0xFF8CD8B4),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '사이드 메뉴',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: _getAdaptiveFontSize(context, 24),
-                    fontFamily: 'head',
-                  ),
-                ),
-                const SizedBox(height: 40),
-                Row(
-                  children: [
-                    Container(
-                      width: 35,
-                      height: 35,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: AssetImage('assets/images/profile.png'),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        '$name님',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: _getAdaptiveFontSize(context, 18),
-                            fontFamily: 'body',
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        // 버튼 클릭 시 동작
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 

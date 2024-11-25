@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // 날짜 형식 사용을 위해 추가
-import 'package:slomon/http_service.dart';
+import 'http_service.dart';
 import 'info_box.dart';
 import 'stat_box.dart';
 import 'graph_card.dart';
@@ -26,6 +26,8 @@ class _RecordPageState extends State<RecordPage> {
   String formattedOnTime = ''; // 급발진 시작 시간
   String formattedOffTime = ''; // 급발진 종료 시간
   bool isLoading = true; // 로딩 상태를 관리하기 위한 변수 추가
+  List<String> suaIds = []; // SUAId 배열 저장
+  List<dynamic> records = []; // 급발진 기록 리스트
 
   @override
   void initState() {
@@ -33,7 +35,6 @@ class _RecordPageState extends State<RecordPage> {
     // UserProvider에서 name 가져오기
     final user = Provider.of<UserProvider>(context, listen: false);
     setState(() {
-      // name을 UTF-8로 디코딩하여 처리
       name = user.name?.isNotEmpty == true ? utf8.decode(user.name!.runes.toList()) : '';
       userId = user.userId ?? "";
     });
@@ -48,47 +49,44 @@ class _RecordPageState extends State<RecordPage> {
       if (response.statusCode == 200) {
         var jsonData = json.decode(utf8.decode(response.bodyBytes));
         if (jsonData['success'] == "true" && jsonData['data'] != null) {
-          List<dynamic> records = jsonData['data'];  // 급발진 기록 리스트
-          records.sort((a, b) {
-            DateTime aTime = DateTime(a['suaonTime'][0], a['suaonTime'][1], a['suaonTime'][2], a['suaonTime'][3], a['suaonTime'][4]);
-            DateTime bTime = DateTime(b['suaonTime'][0], b['suaonTime'][1], b['suaonTime'][2], b['suaonTime'][3], b['suaonTime'][4]);
-            return bTime.compareTo(aTime); // 내림차순 정렬
-          });
+          List<dynamic> fetchedRecords = jsonData['data']; // 급발진 기록 리스트
+          setState(() {
+            records = fetchedRecords;
+            hasRecord = records.isNotEmpty;
 
-          if (records.isNotEmpty) {
-            var latestRecord = records[0];
-            setState(() {
+            // SUAId를 추출하여 저장
+            suaIds = records.map((record) => record['SUAId'] as String).toList();
+
+            // 필터링을 최초로 실행
+            filterRecordsByDate();
+
+            if (hasRecord) {
+              var latestRecord = records[0];
               DateTime onTime = DateTime(
-                latestRecord['suaonTime'][0], // 년
-                latestRecord['suaonTime'][1], // 월
-                latestRecord['suaonTime'][2], // 일
-                latestRecord['suaonTime'][3], // 시간
-                latestRecord['suaonTime'][4], // 분
+                latestRecord['suaonTime'][0],
+                latestRecord['suaonTime'][1],
+                latestRecord['suaonTime'][2],
+                latestRecord['suaonTime'][3],
+                latestRecord['suaonTime'][4],
                 latestRecord['suaonTime'].length > 5 ? latestRecord['suaonTime'][5] : 0,
               );
 
+              // 최근 기록 날짜를 selectedDate로 설정
+              selectedDate = DateFormat('yyyy.MM.dd').format(onTime);
+
               DateTime offTime = DateTime(
-                latestRecord['suaoffTime'][0], // 년
-                latestRecord['suaoffTime'][1], // 월
-                latestRecord['suaoffTime'][2], // 일
-                latestRecord['suaoffTime'][3], // 시간
-                latestRecord['suaoffTime'][4], // 분
+                latestRecord['suaoffTime'][0],
+                latestRecord['suaoffTime'][1],
+                latestRecord['suaoffTime'][2],
+                latestRecord['suaoffTime'][3],
+                latestRecord['suaoffTime'][4],
                 latestRecord['suaoffTime'].length > 5 ? latestRecord['suaoffTime'][5] : 0,
               );
 
               formattedOnTime = DateFormat('HH:mm:ss').format(onTime);
               formattedOffTime = DateFormat('HH:mm:ss').format(offTime);
-
-              // 날짜 형식으로 selectedDate 설정
-              selectedDate = DateFormat('yyyy.MM.dd').format(onTime);
-              hasRecord = true;
-            });
-          } else {
-            setState(() {
-              selectedDate = DateFormat('yyyy.MM.dd').format(DateTime.now());
-              hasRecord = false;
-            });
-          }
+            }
+          });
         }
       }
     } catch (e) {
@@ -112,12 +110,49 @@ class _RecordPageState extends State<RecordPage> {
             },
           ),
         ),
-        title: Text(
-          '급발진 상황 기록',
-          style: TextStyle(
-              fontSize: _getAdaptiveFontSize(context, 28),
-              fontFamily: 'head',
-              color: colorFromHex('#818585')),
+        title: Column(
+          children: [
+            Text(
+              '급발진 상황 기록',
+              style: TextStyle(
+                fontSize: _getAdaptiveFontSize(context, 28),
+                fontFamily: 'head',
+                color: colorFromHex('#818585'),
+              ),
+            ),
+            GestureDetector(
+              onTap: () async {
+                DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: selectedDate.isNotEmpty
+                      ? DateTime.parse(selectedDate.replaceAll('.', '-'))
+                      : DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime.now(),
+                );
+                if (pickedDate != null) {
+                  setState(() {
+                    selectedDate = DateFormat('yyyy.MM.dd').format(pickedDate);
+                    // 날짜 선택 후 데이터 필터링
+                    filterRecordsByDate();
+                  });
+                }
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    selectedDate.isNotEmpty ? selectedDate : '날짜 선택', // 선택된 날짜로 표시
+                    style: TextStyle(
+                      fontSize: _getAdaptiveFontSize(context, 16),
+                      color: colorFromHex('#8CD8B4'),
+                    ),
+                  ),
+                  const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                ],
+              ),
+            ),
+          ],
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -143,46 +178,45 @@ class _RecordPageState extends State<RecordPage> {
           color: colorFromHex('#8CD8B4'),
         ),
       )
-          : SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!hasRecord)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(
-                        color: colorFromHex('#8CD8B4'),
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 30.0),
-                    child: Text(
-                      '급발진 기록이 존재하지 않습니다.',
-                      style: TextStyle(
-                        fontSize: _getAdaptiveFontSize(context, 24),
-                        color: colorFromHex('#818585'),
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            if (hasRecord) ...[
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
+          : hasRecord
+          ? PageView.builder(
+        itemCount: records.length,
+        itemBuilder: (context, index) {
+          var record = records[index];
+          DateTime onTime = DateTime(
+            record['suaonTime'][0],
+            record['suaonTime'][1],
+            record['suaonTime'][2],
+            record['suaonTime'][3],
+            record['suaonTime'][4],
+            record['suaonTime'].length > 5 ? record['suaonTime'][5] : 0,
+          );
+
+          DateTime offTime = DateTime(
+            record['suaoffTime'][0],
+            record['suaoffTime'][1],
+            record['suaoffTime'][2],
+            record['suaoffTime'][3],
+            record['suaoffTime'][4],
+            record['suaoffTime'].length > 5 ? record['suaoffTime'][5] : 0,
+          );
+
+          String formattedOnTime = DateFormat('HH:mm:ss').format(onTime);
+          String formattedOffTime = DateFormat('HH:mm:ss').format(offTime);
+          String selectedDate = DateFormat('yyyy.MM.dd').format(onTime);
+
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 날짜와 시간을 가로로 배치
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     InfoBox(
                       icon: Icons.calendar_today,
                       text: selectedDate,
-                      onTap: () => _selectDate(context),
                     ),
                     InfoBox(
                       icon: Icons.access_time,
@@ -190,34 +224,36 @@ class _RecordPageState extends State<RecordPage> {
                     ),
                   ],
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: StatBox(
+                const SizedBox(height: 16),
+                StatBox(
                   label: '주행 거리',
                   value: '1.54km',
                   color: colorFromHex('#8CD8B4'),
                 ),
-              ),
-              const SizedBox(height: 16),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: GraphCard(
+                const SizedBox(height: 16),
+                const GraphCard(
                   title: '페달 기록',
                   child: PedalChart(),
                 ),
-              ),
-              const SizedBox(height: 16),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: GraphCard(
+                const SizedBox(height: 16),
+                const GraphCard(
                   title: '속도',
                   subtitle: '평균: 165km',
                   child: SpeedChart(),
                 ),
-              ),
-            ],
-          ],
+              ],
+            ),
+          );
+        },
+      )
+          : Center(
+        child: Text(
+          '급발진 기록이 존재하지 않습니다.',
+          style: TextStyle(
+            fontSize: _getAdaptiveFontSize(context, 24),
+            color: colorFromHex('#818585'),
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
@@ -231,26 +267,36 @@ class _RecordPageState extends State<RecordPage> {
     return Color(int.parse('0x$hexColor'));
   }
 
-  void _selectDate(BuildContext context) async {
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (pickedDate != null) {
-      setState(() {
-        selectedDate = DateFormat('yyyy.MM.dd').format(pickedDate); // 선택한 날짜 포맷팅
-      });
-    }
-  }
-
   double _getAdaptiveFontSize(BuildContext context, double size) {
     final screenSize = MediaQuery.of(context).size;
     final aspectRatio = screenSize.width / screenSize.height;
-    const baseAspectRatio = 375.0 / 667.0;
-    return size *
-        (aspectRatio / baseAspectRatio) *
-        MediaQuery.of(context).textScaleFactor;
+    const baseAspectRatio = 9.0 / 16.0;
+    return size * (aspectRatio / baseAspectRatio);
+  }
+
+  void filterRecordsByDate() {
+    if (selectedDate.isEmpty) return;
+
+    // selectedDate를 DateTime 객체로 변환
+    DateTime selectedDateTime = DateFormat('yyyy.MM.dd').parse(selectedDate);
+
+    setState(() {
+      // records를 필터링하고 결과가 없을 경우 적절히 처리
+      records = records.where((record) {
+        DateTime onTime = DateTime(
+          record['suaonTime'][0], // 년
+          record['suaonTime'][1], // 월
+          record['suaonTime'][2], // 일
+        );
+
+        // 날짜만 비교 (시간을 제외한 비교)
+        return onTime.year == selectedDateTime.year &&
+            onTime.month == selectedDateTime.month &&
+            onTime.day == selectedDateTime.day;
+      }).toList();
+
+      // 필터링 후 records가 비어있다면 hasRecord를 false로 설정
+      hasRecord = records.isNotEmpty;
+    });
   }
 }
