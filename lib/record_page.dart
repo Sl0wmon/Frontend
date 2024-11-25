@@ -42,6 +42,8 @@ class _RecordPageState extends State<RecordPage> {
     fetchData(); // 데이터 fetch
   }
 
+  List<dynamic> originalRecords = []; // 원본 데이터를 저장할 리스트
+
   Future<void> fetchData() async {
     try {
       final response = await HttpService().postRequest("SUARecord/list", {"userId": userId});
@@ -49,16 +51,14 @@ class _RecordPageState extends State<RecordPage> {
       if (response.statusCode == 200) {
         var jsonData = json.decode(utf8.decode(response.bodyBytes));
         if (jsonData['success'] == "true" && jsonData['data'] != null) {
-          List<dynamic> fetchedRecords = jsonData['data']; // 급발진 기록 리스트
           setState(() {
-            records = fetchedRecords;
+            // 원본 데이터를 저장
+            originalRecords = jsonData['data'];
+            // 화면에 표시할 records를 원본 데이터로 초기화
+            records = List.from(originalRecords);
+            // SUAId 추출하여 리스트에 저장
+            suaIds = records.map((record) => record['SUAId'].toString()).toList();
             hasRecord = records.isNotEmpty;
-
-            // SUAId를 추출하여 저장
-            suaIds = records.map((record) => record['SUAId'] as String).toList();
-
-            // 필터링을 최초로 실행
-            filterRecordsByDate();
 
             if (hasRecord) {
               var latestRecord = records[0];
@@ -73,18 +73,6 @@ class _RecordPageState extends State<RecordPage> {
 
               // 최근 기록 날짜를 selectedDate로 설정
               selectedDate = DateFormat('yyyy.MM.dd').format(onTime);
-
-              DateTime offTime = DateTime(
-                latestRecord['suaoffTime'][0],
-                latestRecord['suaoffTime'][1],
-                latestRecord['suaoffTime'][2],
-                latestRecord['suaoffTime'][3],
-                latestRecord['suaoffTime'][4],
-                latestRecord['suaoffTime'].length > 5 ? latestRecord['suaoffTime'][5] : 0,
-              );
-
-              formattedOnTime = DateFormat('HH:mm:ss').format(onTime);
-              formattedOffTime = DateFormat('HH:mm:ss').format(offTime);
             }
           });
         }
@@ -93,10 +81,34 @@ class _RecordPageState extends State<RecordPage> {
       print('Error fetching user info: $e');
     } finally {
       setState(() {
-        isLoading = false; // 데이터 로드가 끝나면 로딩 상태 종료
+        isLoading = false;
       });
     }
   }
+
+  void filterRecordsByDate() {
+    if (selectedDate.isEmpty) return;
+
+    DateTime selectedDateTime = DateFormat('yyyy.MM.dd').parse(selectedDate);
+
+    setState(() {
+      // 필터링 전에 항상 원본 데이터를 참조
+      records = originalRecords.where((record) {
+        DateTime onTime = DateTime(
+          record['suaonTime'][0], // 년
+          record['suaonTime'][1], // 월
+          record['suaonTime'][2], // 일
+        );
+
+        return onTime.year == selectedDateTime.year &&
+            onTime.month == selectedDateTime.month &&
+            onTime.day == selectedDateTime.day;
+      }).toList();
+
+      hasRecord = records.isNotEmpty;
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -272,31 +284,5 @@ class _RecordPageState extends State<RecordPage> {
     final aspectRatio = screenSize.width / screenSize.height;
     const baseAspectRatio = 9.0 / 16.0;
     return size * (aspectRatio / baseAspectRatio);
-  }
-
-  void filterRecordsByDate() {
-    if (selectedDate.isEmpty) return;
-
-    // selectedDate를 DateTime 객체로 변환
-    DateTime selectedDateTime = DateFormat('yyyy.MM.dd').parse(selectedDate);
-
-    setState(() {
-      // records를 필터링하고 결과가 없을 경우 적절히 처리
-      records = records.where((record) {
-        DateTime onTime = DateTime(
-          record['suaonTime'][0], // 년
-          record['suaonTime'][1], // 월
-          record['suaonTime'][2], // 일
-        );
-
-        // 날짜만 비교 (시간을 제외한 비교)
-        return onTime.year == selectedDateTime.year &&
-            onTime.month == selectedDateTime.month &&
-            onTime.day == selectedDateTime.day;
-      }).toList();
-
-      // 필터링 후 records가 비어있다면 hasRecord를 false로 설정
-      hasRecord = records.isNotEmpty;
-    });
   }
 }

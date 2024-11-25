@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:slomon/http_service.dart';
 import 'package:slomon/user_provider.dart';
 import 'DataProvider.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 import 'drawer_widget.dart';
@@ -27,7 +26,7 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
     final user = Provider.of<UserProvider>(context, listen: false); // listen: false로 값을 가져옴
     timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => fetchData());
-    name = user.name ?? "";
+    name = user.name?.isNotEmpty == true ? utf8.decode(user.name!.runes.toList()) : '';
     userId = user.userId ?? "";
   }
 
