@@ -5,7 +5,7 @@ class InfoBox extends StatelessWidget {
   final String text;
   final VoidCallback? onTap; // 콜백 추가
 
-  InfoBox({required this.icon, required this.text, this.onTap});
+  const InfoBox({super.key, required this.icon, required this.text, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -14,8 +14,8 @@ class InfoBox extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, color: Colors.grey),
-          SizedBox(width: 8),
-          Text(text, style: TextStyle(color: Colors.grey)),
+          const SizedBox(width: 8),
+          Text(text, style: const TextStyle(color: Colors.grey)),
         ],
       ),
     );

@@ -4,6 +4,8 @@ import 'http_service.dart';
 import 'dart:convert';
 
 class RegistPage extends StatefulWidget {
+  const RegistPage({super.key});
+
   @override
   _RegistPageState createState() => _RegistPageState();
 }
@@ -93,7 +95,7 @@ class _RegistPageState extends State<RegistPage> {
           _showDialog("회원가입 성공", "회원가입에 성공하셨습니다.");
           Navigator.pop(context);
           Navigator.push(
-              context, MaterialPageRoute(builder: (context) => LoginPage()));
+              context, MaterialPageRoute(builder: (context) => const LoginPage()));
         } else {
           _showDialog("회원가입 실패", "회원가입에 실패하였습니다. 잠시 후 다시 시도해 주십시오.");
         }
@@ -117,7 +119,7 @@ class _RegistPageState extends State<RegistPage> {
               onPressed: () {
                 Navigator.of(context).pop(); // 다이얼로그 닫기
               },
-              child: Text("확인"),
+              child: const Text("확인"),
             ),
           ],
         );
@@ -142,7 +144,7 @@ class _RegistPageState extends State<RegistPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(4.0),
+          preferredSize: const Size.fromHeight(4.0),
           child: Container(
             color: colorFromHex('#8CD8B4'),
             height: 4.0,
@@ -178,7 +180,7 @@ class _RegistPageState extends State<RegistPage> {
                   _userId = value;
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
                 decoration: InputDecoration(
@@ -200,7 +202,7 @@ class _RegistPageState extends State<RegistPage> {
                   return null;
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _confirmPasswordController,
                 decoration: InputDecoration(
@@ -225,7 +227,7 @@ class _RegistPageState extends State<RegistPage> {
                   return null;
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 decoration: InputDecoration(
                   labelText: '이름',
@@ -248,7 +250,7 @@ class _RegistPageState extends State<RegistPage> {
                   _name = value;
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 decoration: InputDecoration(
                   labelText: '전화번호',
@@ -278,19 +280,19 @@ class _RegistPageState extends State<RegistPage> {
                 },
               ),
 
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: registerUser,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorFromHex('#8CD8B4'),
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                ),
                 child: Text(
                   '등록',
                   style: TextStyle(
                       color: colorFromHex('#FFFFFF'),
                       fontSize: 24,
                       fontFamily: 'head'),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorFromHex('#8CD8B4'),
-                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                 ),
               ),
             ],
@@ -303,7 +305,7 @@ class _RegistPageState extends State<RegistPage> {
   Color colorFromHex(String hexColor) {
     hexColor = hexColor.replaceAll('#', '');
     if (hexColor.length == 6) {
-      hexColor = 'FF' + hexColor;
+      hexColor = 'FF$hexColor';
     }
     return Color(int.parse('0x$hexColor'));
   }

@@ -1,70 +1,234 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // 날짜 형식 사용을 위해 추가
-import 'package:slomon/replacementCycle.dart';
-import 'dashboard_page.dart';
-import 'myPage.dart';
-import 'notification_page.dart';
-import 'obd_guide_page.dart';
+import 'package:slomon/http_service.dart';
 import 'info_box.dart';
 import 'stat_box.dart';
 import 'graph_card.dart';
 import 'pedal_chart.dart';
 import 'speed_chart.dart';
-import 'package:http/http.dart' as http;
-
+import 'drawer_widget.dart';
+import 'package:provider/provider.dart';
+import 'user_provider.dart';
 
 class RecordPage extends StatefulWidget {
+  const RecordPage({super.key});
+
   @override
   _RecordPageState createState() => _RecordPageState();
 }
 
 class _RecordPageState extends State<RecordPage> {
-  String receivedData = "";
-
-  String selectedDate = '2024.09.04'; // 초기 날짜 설정
-
-  final Map<String, dynamic> userData = {
-    "userId": "test"// 서버에 보낼 사용자 데이터
-  };
+  String selectedDate = ''; // 날짜를 빈 문자열로 초기화
   String name = ""; // 이름 변수
-  String phone = "";
+  String userId = "";
+  bool hasRecord = false; // 급발진 기록이 있는지 여부를 추적
+  String formattedOnTime = ''; // 급발진 시작 시간
+  String formattedOffTime = ''; // 급발진 종료 시간
+  bool isLoading = true; // 로딩 상태를 관리하기 위한 변수 추가
 
   @override
   void initState() {
     super.initState();
-    fetchUserInfo();  // 사용자 정보를 가져오는 함수 호출
+    // UserProvider에서 name 가져오기
+    final user = Provider.of<UserProvider>(context, listen: false);
+    setState(() {
+      // name을 UTF-8로 디코딩하여 처리
+      name = user.name?.isNotEmpty == true ? utf8.decode(user.name!.runes.toList()) : '';
+      userId = user.userId ?? "";
+    });
+
+    fetchData(); // 데이터 fetch
   }
 
-
-  Future<void> fetchUserInfo() async {
+  Future<void> fetchData() async {
     try {
-      final url = Uri.parse('http://192.168.45.134:8080/api/user/view');
-
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({"userId": "kchh0925"}),
-      );
+      final response = await HttpService().postRequest("SUARecord/list", {"userId": userId});
 
       if (response.statusCode == 200) {
-        // UTF-8 디코딩
         var jsonData = json.decode(utf8.decode(response.bodyBytes));
-
         if (jsonData['success'] == "true" && jsonData['data'] != null) {
-          setState(() {
-            name = jsonData['data']['name'];
+          List<dynamic> records = jsonData['data'];  // 급발진 기록 리스트
+          records.sort((a, b) {
+            DateTime aTime = DateTime(a['suaonTime'][0], a['suaonTime'][1], a['suaonTime'][2], a['suaonTime'][3], a['suaonTime'][4]);
+            DateTime bTime = DateTime(b['suaonTime'][0], b['suaonTime'][1], b['suaonTime'][2], b['suaonTime'][3], b['suaonTime'][4]);
+            return bTime.compareTo(aTime); // 내림차순 정렬
           });
-        } else {
-          print('Unexpected response format: ${jsonData.toString()}');
+
+          if (records.isNotEmpty) {
+            var latestRecord = records[0];
+            setState(() {
+              DateTime onTime = DateTime(
+                latestRecord['suaonTime'][0], // 년
+                latestRecord['suaonTime'][1], // 월
+                latestRecord['suaonTime'][2], // 일
+                latestRecord['suaonTime'][3], // 시간
+                latestRecord['suaonTime'][4], // 분
+                latestRecord['suaonTime'].length > 5 ? latestRecord['suaonTime'][5] : 0,
+              );
+
+              DateTime offTime = DateTime(
+                latestRecord['suaoffTime'][0], // 년
+                latestRecord['suaoffTime'][1], // 월
+                latestRecord['suaoffTime'][2], // 일
+                latestRecord['suaoffTime'][3], // 시간
+                latestRecord['suaoffTime'][4], // 분
+                latestRecord['suaoffTime'].length > 5 ? latestRecord['suaoffTime'][5] : 0,
+              );
+
+              formattedOnTime = DateFormat('HH:mm:ss').format(onTime);
+              formattedOffTime = DateFormat('HH:mm:ss').format(offTime);
+
+              // 날짜 형식으로 selectedDate 설정
+              selectedDate = DateFormat('yyyy.MM.dd').format(onTime);
+              hasRecord = true;
+            });
+          } else {
+            setState(() {
+              selectedDate = DateFormat('yyyy.MM.dd').format(DateTime.now());
+              hasRecord = false;
+            });
+          }
         }
-      } else {
-        print('Failed to load user info. Status code: ${response.statusCode}');
       }
     } catch (e) {
       print('Error fetching user info: $e');
+    } finally {
+      setState(() {
+        isLoading = false; // 데이터 로드가 끝나면 로딩 상태 종료
+      });
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.grey),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
+        ),
+        title: Text(
+          '급발진 상황 기록',
+          style: TextStyle(
+              fontSize: _getAdaptiveFontSize(context, 28),
+              fontFamily: 'head',
+              color: colorFromHex('#818585')),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: const [
+          Icon(Icons.notifications, color: Colors.grey),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(2),
+          child: Container(
+            height: 7,
+            color: colorFromHex('#8CD8B4'),
+          ),
+        ),
+      ),
+      drawer: DrawerWidget(
+        name: name,
+        getAdaptiveFontSize: _getAdaptiveFontSize,
+      ),
+      body: isLoading
+          ? Center(
+        child: CircularProgressIndicator(
+          color: colorFromHex('#8CD8B4'),
+        ),
+      )
+          : SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!hasRecord)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(
+                        color: colorFromHex('#8CD8B4'),
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 30.0),
+                    child: Text(
+                      '급발진 기록이 존재하지 않습니다.',
+                      style: TextStyle(
+                        fontSize: _getAdaptiveFontSize(context, 24),
+                        color: colorFromHex('#818585'),
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ),
+            if (hasRecord) ...[
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    InfoBox(
+                      icon: Icons.calendar_today,
+                      text: selectedDate,
+                      onTap: () => _selectDate(context),
+                    ),
+                    InfoBox(
+                      icon: Icons.access_time,
+                      text: '$formattedOnTime ~ $formattedOffTime',
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: StatBox(
+                  label: '주행 거리',
+                  value: '1.54km',
+                  color: colorFromHex('#8CD8B4'),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: GraphCard(
+                  title: '페달 기록',
+                  child: PedalChart(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: GraphCard(
+                  title: '속도',
+                  subtitle: '평균: 165km',
+                  child: SpeedChart(),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color colorFromHex(String hexColor) {
+    hexColor = hexColor.replaceAll('#', '');
+    if (hexColor.length == 6) {
+      hexColor = 'FF' + hexColor;
+    }
+    return Color(int.parse('0x$hexColor'));
   }
 
   void _selectDate(BuildContext context) async {
@@ -81,215 +245,12 @@ class _RecordPageState extends State<RecordPage> {
     }
   }
 
-  Color colorFromHex(String hexColor) {
-    hexColor = hexColor.replaceAll('#', '');
-    if (hexColor.length == 6) {
-      hexColor = 'FF' + hexColor;
-    }
-    return Color(int.parse('0x$hexColor'));
-  }
-
-
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: Colors.grey),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
-        ),
-        title: Text(
-          '급발진 상황 기록',
-          style: TextStyle(
-              fontSize: _getAdaptiveFontSize(context, 28),
-              fontFamily: 'head',
-              color: colorFromHex('#818585')
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          Icon(Icons.notifications, color: Colors.grey),
-        ],
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(2),
-          child: Container(
-            height: 7,
-            color: colorFromHex('#8CD8B4'),
-          ),
-        ),
-      ),
-      drawer: _buildDrawer(context),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 날짜 및 시간
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  InfoBox(
-                    icon: Icons.calendar_today,
-                    text: selectedDate, // 선택한 날짜 표시
-                    onTap: () => _selectDate(context), // 날짜 선택
-                  ),
-                  InfoBox(icon: Icons.access_time, text: '15:30:22~15:40:56'),
-                ],
-              ),
-            ),
-            // 주행 거리
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: StatBox(
-                label: '주행 거리',
-                value: '1.54km',
-                color: colorFromHex('#8CD8B4'),
-              ),
-            ),
-            SizedBox(height: 16),
-            // 페달 기록 그래프
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: GraphCard(
-                title: '페달 기록',
-                child: PedalChart(),
-              ),
-            ),
-            SizedBox(height: 16),
-            // 속도 그래프
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: GraphCard(
-                title: '속도',
-                subtitle: '평균: 165km',
-                child: SpeedChart(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   double _getAdaptiveFontSize(BuildContext context, double size) {
     final screenSize = MediaQuery.of(context).size;
     final aspectRatio = screenSize.width / screenSize.height;
-    final baseAspectRatio = 375.0 / 667.0;
-    return size * (aspectRatio / baseAspectRatio) *
+    const baseAspectRatio = 375.0 / 667.0;
+    return size *
+        (aspectRatio / baseAspectRatio) *
         MediaQuery.of(context).textScaleFactor;
-  }
-
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Color(0xFF8CD8B4),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '사이드 메뉴',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: _getAdaptiveFontSize(context, 24),
-                    fontFamily: 'head',
-                  ),
-                ),
-                SizedBox(height: 40), // 사이드 메뉴와 이름 간격 조정
-                Row(
-                  children: [
-                    // 프로필 이미지 위치
-                    Container(
-                      width: 35,
-                      height: 35,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: AssetImage('assets/images/profile.png'), // 이미지 경로 지정
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10), // 이미지와 텍스트 간격 조정
-                    Expanded(
-                      child: Text(
-                        '$name님', // 이름 텍스트 표시
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: _getAdaptiveFontSize(context, 18),
-                            fontFamily: 'body',
-                            fontWeight: FontWeight.bold
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                            context, MaterialPageRoute(builder: (context) => MyPage())
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          _buildDrawerItem(context, "대시보드", Icons.dashboard, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => DashboardPage())
-            );
-          }),
-          _buildDrawerItem(context, "급발진 상황 기록", Icons.history, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => RecordPage()));
-          }),
-          _buildDrawerItem(context, "차량 부품 교체 주기", Icons.car_repair, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => ReplacementCyclePage()));
-          }),
-          _buildDrawerItem(context, "OBD 진단 가이드", Icons.info, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => ObdGuidePage()));
-          }),
-          _buildDrawerItem(context, "알림", Icons.notifications, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => NotificationPage()));
-          }),
-        ],
-      ),
-    );
-  }
-  Widget _buildDrawerItem(
-      BuildContext context, String title, IconData icon, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: colorFromHex('#8CD8B4')),
-      title: Text(
-        title,
-        style: TextStyle(fontFamily: 'body'),
-      ),
-      onTap: onTap,
-    );
   }
 }

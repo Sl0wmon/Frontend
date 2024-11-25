@@ -5,7 +5,7 @@ class GraphCard extends StatelessWidget {
   final String? subtitle;
   final Widget child;
 
-  const GraphCard({
+  const GraphCard({super.key, 
     required this.title,
     this.subtitle,
     required this.child,
@@ -14,7 +14,7 @@ class GraphCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
@@ -25,7 +25,7 @@ class GraphCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
               decoration: TextDecoration.underline,
@@ -33,14 +33,14 @@ class GraphCard extends StatelessWidget {
             ),
           ),
           if (subtitle != null) ...[
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               subtitle!,
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
           ],
-          SizedBox(height: 16),
-          Container(
+          const SizedBox(height: 16),
+          SizedBox(
             height: 150,
             child: child,
           ),

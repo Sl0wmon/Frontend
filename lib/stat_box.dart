@@ -5,7 +5,7 @@ class StatBox extends StatelessWidget {
   final String value;
   final Color color;
 
-  const StatBox({
+  const StatBox({super.key, 
     required this.label,
     required this.value,
     required this.color,
@@ -14,7 +14,7 @@ class StatBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),

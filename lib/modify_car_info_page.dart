@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
+import 'car_provider.dart';
 import 'http_service.dart';
 import 'myPage.dart';
 import 'user_provider.dart';
-import 'car_provider.dart';
 import 'package:provider/provider.dart';
 
-class AddCarInfoPage extends StatefulWidget {
-  const AddCarInfoPage({super.key});
+class ModifyCarInfoPage extends StatefulWidget {
+  const ModifyCarInfoPage({super.key});
 
   @override
-  _AddCarInfoPageState createState() => _AddCarInfoPageState();
+  _ModifyCarInfoPageState createState() => _ModifyCarInfoPageState();
 }
 
-class _AddCarInfoPageState extends State<AddCarInfoPage> {
+class _ModifyCarInfoPageState extends State<ModifyCarInfoPage> {
   // 각 DropdownButton의 선택된 값을 저장할 변수들
   String? selectedManufacturer;
   String? selectedCarType;
@@ -27,16 +27,19 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
   List<String> carTypeOptions = []; // 차급 옵션 리스트
   List<String> exteriorOptions = []; // 외형 옵션 리스트
 
-  String name = "";
   String userId = "";
+  String name = ""; // 이름 변수
+  String carId = "";
 
   @override
   void initState() {
     super.initState();
     final user = Provider.of<UserProvider>(context, listen: false);
+    final car = Provider.of<CarProvider>(context, listen: false);
     setState(() {
-      name = user.name?.isNotEmpty == true ? utf8.decode(user.name!.runes.toList()) : '';
       userId = user.userId ?? "";
+      name = user.name?.isNotEmpty == true ? utf8.decode(user.name!.runes.toList()) : '';
+      carId = car.carId;
     });
   }
 
@@ -121,7 +124,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                 hint: Text("선택 1"),
                 isExpanded: true,
                 underline: SizedBox(),
-                items:  [null, '현대', '기아', 'KGM', 'gm(쉐보레, 캐딜락, 사브, 뷰익)', '르노코리아', '대우','제네시스', 'BMW', '벤츠', '아우디' ]
+                items:  [null, '현대', '기아', 'KGM', '쉐보레', '르노코리아', '대우','제네시스', 'BMW', '벤츠', '아우디' ]
                     .map<DropdownMenuItem<String?>>((String? i) {
                   return DropdownMenuItem<String?>(
                     value: i,
@@ -150,7 +153,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                       carTypeOptions = ['세단/해치백/왜건','SUV','MPV','전기차'];
                     } else if (value == 'KGM') {
                       carTypeOptions = ['세단','SUV', '픽업 트럭', 'MPV','버스'];
-                    } else if (value == '쉐보레') {
+                    } else if (value == '쉐보레ㅅ') {
                       carTypeOptions = ['쉐보레','캐딜락','사브','뷰익'];
                     } else if (value == '르노') {
                       carTypeOptions = ['소형', '세단','SUV,RV','상용차','전기차'];
@@ -241,7 +244,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                       }else if (selectedCarType == '버스') {
                         exteriorOptions = ['DA트럭', '동아 초대형 덤프트럭', '동아 HA/HR버스', '동아 MCI 버스', '에어로버스', 'SY트럭', '트랜스타', '메르세데스-벤츠 21.5톤 초대형 덤프트럭'];
                       } else { exteriorOptions = [];}
-                    } else if (selectedManufacturer == 'gm(쉐보레, 캐딜락, 사브, 뷰익)') {
+                    } else if (selectedManufacturer == '쉐보레') {
                       if (selectedCarType == '쉐보레') {
                         exteriorOptions = [ '스파크', '볼트 EV', '아베오', '크루즈', '말리부', '임팔라', '카마로', '콜벳', '트랙스 1세대', '볼트 EUV', '이쿼녹스', '캡티바', '올란도'];
                       } else if (selectedCarType == '캐딜락') {
@@ -503,7 +506,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                   final parsedManufacturer = parseManufacturer(selectedManufacturer);
 
                   final requestData = {
-                    "userId": userId,
+                    "carId": carId,
                     "manufacturer": parsedManufacturer,
                     "size": selectedCarType,
                     "model": selectedFuelType,
@@ -513,18 +516,17 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                   };
 
                   try {
-                    final response = await HttpService().postRequest('car/add', requestData);
+                    final response = await HttpService().postRequest("car/update", requestData);
                     var jsonData = json.decode(utf8.decode(response.bodyBytes));
-                    print("Response body: ${response.body}");
 
-                    if (response.statusCode == 201 && jsonData['success'] == 'true') {
+                    if (response.statusCode == 200 && jsonData['success'] == 'true') {
 
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('${jsonData['message']}')),
                       );
 
                       final carViewResponse = await HttpService().postRequest('car/view/user',
-                      {"userId": userId},
+                        {"userId": userId},
                       );
 
                       if (carViewResponse.statusCode == 200) {
@@ -548,17 +550,18 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
 
                       Navigator.pop(context);
                       Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => MyPage()),
+                          context,
+                          MaterialPageRoute(builder: (context) => MyPage()),
                       );
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('차량 등록 실패. 다시 시도해주세요.')),
+                        const SnackBar(content: Text('차량 수정 실패. 다시 시도해주세요.')),
                       );
                     }
                   } catch (e) {
                     // 예외 발생 시 로그에 출력
                     print("Error: $e");
+
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('서버 오류: $e')),
                     );
@@ -572,7 +575,7 @@ class _AddCarInfoPageState extends State<AddCarInfoPage> {
                   ),
                 ),
                 child: Text(
-                  "등록",
+                  "수정",
                   style: TextStyle(
                     fontSize: 18,
                     color: Colors.white, // 텍스트 색상

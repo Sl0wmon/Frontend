@@ -1,3 +1,5 @@
+// lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:slomon/addCarInfo_page.dart';
@@ -11,6 +13,9 @@ import 'dashboard_page.dart';
 import 'login_page.dart';
 import 'ble_page.dart'; // BLE 관련 페이지 추가
 import 'package:provider/provider.dart';
+import 'user_provider.dart';
+import 'car_provider.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(
@@ -19,9 +24,20 @@ void main() {
       child: MyApp(),
     ),
   );
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()), // UserProvider를 전역 상태로 등록
+        ChangeNotifierProvider(create: (_) => CarProvider()),  // CarProvider를 전역 상태로 등록
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

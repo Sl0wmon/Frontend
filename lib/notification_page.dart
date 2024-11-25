@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-import 'package:slomon/dashboard_page.dart';
-import 'package:slomon/obd_guide_page.dart';
-import 'package:slomon/record_page.dart';
-import 'package:slomon/replacementCycle.dart';
+import 'dashboard_page.dart';
+import 'obd_guide_page.dart';
+import 'record_page.dart';
+import 'replacementCycle.dart';
 import 'myPage.dart';
+import 'user_provider.dart';
+import 'package:provider/provider.dart';
+import 'http_service.dart';
+import 'drawer_widget.dart';
 
 class NotificationPage extends StatefulWidget {
   @override
@@ -15,32 +17,25 @@ class NotificationPage extends StatefulWidget {
 
 
 class _NotificationPageState extends State<NotificationPage> {
-  String receivedData = "";
-
-  @override
-  final Map<String, dynamic> userData = {
-    "userId": "test"// 서버에 보낼 사용자 데이터
-  };
-  String name = ""; // 이름 변수
-  String phone = ""; // 이름 변수
+  String name = "";
+  String userId = "";
   List<dynamic> notifications = [];
   bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = Provider.of<UserProvider>(context, listen: false);
+    setState(() {
+      name = user.name?.isNotEmpty == true ? utf8.decode(user.name!.runes.toList()) : '';
+      userId = user.userId ?? "";
+    });
+  }
 
 
   Future<void> deleteAllNotifications() async {
     try {
-      final url = Uri.parse('http://192.168.45.134:8080/api/notification/delete');
-
-      // 서버에 전달할 데이터
-      final requestBody = {
-        "userId": "kchh0925", // 사용자 ID
-      };
-
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode(requestBody),
-      );
+      final response = await HttpService().postRequest("notification/delete", {"userId": userId});
 
       if (response.statusCode == 200) {
         var jsonData = json.decode(utf8.decode(response.bodyBytes));
@@ -66,13 +61,7 @@ class _NotificationPageState extends State<NotificationPage> {
 
   Future<void> fetchNotifications() async {
     try {
-      final url = Uri.parse('http://192.168.45.134:8080/api/notification/view');
-
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({"userId": "kchh0925"}), // userId 설정
-      );
+      final response = await HttpService().postRequest("notification/view", {"userId": userId});
 
       if (response.statusCode == 200) {
         var jsonData = json.decode(utf8.decode(response.bodyBytes));
@@ -104,36 +93,6 @@ class _NotificationPageState extends State<NotificationPage> {
     }
   }
 
-
-  Future<void> fetchUserInfo() async {
-    try {
-      final url = Uri.parse('http://192.168.45.134:8080/api/user/view');
-
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({"userId": "kchh0925"}),
-      );
-
-      if (response.statusCode == 200) {
-        // UTF-8 디코딩
-        var jsonData = json.decode(utf8.decode(response.bodyBytes));
-
-        if (jsonData['success'] == "true" && jsonData['data'] != null) {
-          setState(() {
-            name = jsonData['data']['name'];
-          });
-        } else {
-          print('Unexpected response format: ${jsonData.toString()}');
-        }
-      } else {
-        print('Failed to load user info. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error fetching user info: $e');
-    }
-  }
-
   Widget _buildDrawerItem(
       BuildContext context, String title, IconData icon, VoidCallback onTap) {
     return ListTile(
@@ -153,14 +112,6 @@ class _NotificationPageState extends State<NotificationPage> {
     return size * (aspectRatio / baseAspectRatio) *
         MediaQuery.of(context).textScaleFactor;
   }
-
-  @override
-  void initState() {
-    super.initState();
-    fetchUserInfo(); // 사용자 정보를 가져오는 함수 호출
-    fetchNotifications(); // 알림 데이터를 가져오는 함수 호출
-  }
-
 
   Future<void> _initializeNotifications() async {
     setState(() {
@@ -336,7 +287,10 @@ class _NotificationPageState extends State<NotificationPage> {
           ),
         ),
       ),
-      drawer: _buildDrawer(context), // 기존 Drawer 유지
+      drawer: DrawerWidget(
+        name: name,
+        getAdaptiveFontSize: _getAdaptiveFontSize,
+      ), // 기존 Drawer 유지
       body: isLoading
           ? Center(
         child: CircularProgressIndicator(), // 로딩 상태 표시
@@ -420,6 +374,4 @@ class _NotificationPageState extends State<NotificationPage> {
       ),
     );
   }
-
-
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 class SpeedChart extends StatelessWidget {
+  const SpeedChart({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: 150,
       width: double.infinity,
       child: CustomPaint(

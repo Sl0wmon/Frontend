@@ -27,7 +27,7 @@ class _DeviceWithAvailability {
   _DeviceAvailability availability;
   int? rssi;
 
-  _DeviceWithAvailability(this.device, this.availability, [this.rssi]);
+  _DeviceWithAvailability(this.device, this.availability);
 }
 
 class _SelectBondedDevicePage extends State<SelectBondedDevicePage> {
