@@ -2,14 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // 날짜 형식 사용을 위해 추가
 import 'http_service.dart';
-import 'info_box.dart';
-import 'stat_box.dart';
-import 'graph_card.dart';
-import 'pedal_chart.dart';
-import 'speed_chart.dart';
-import 'drawer_widget.dart';
 import 'package:provider/provider.dart';
 import 'user_provider.dart';
+import 'sua_detail_page.dart'; // 상세 페이지 import
 
 class RecordPage extends StatefulWidget {
   const RecordPage({super.key});
@@ -23,8 +18,6 @@ class _RecordPageState extends State<RecordPage> {
   String name = ""; // 이름 변수
   String userId = "";
   bool hasRecord = false; // 급발진 기록이 있는지 여부를 추적
-  String formattedOnTime = ''; // 급발진 시작 시간
-  String formattedOffTime = ''; // 급발진 종료 시간
   bool isLoading = true; // 로딩 상태를 관리하기 위한 변수 추가
   List<String> suaIds = []; // SUAId 배열 저장
   List<dynamic> records = []; // 급발진 기록 리스트
@@ -46,45 +39,50 @@ class _RecordPageState extends State<RecordPage> {
 
   Future<void> fetchData() async {
     try {
+      // API 요청
       final response = await HttpService().postRequest("SUARecord/list", {"userId": userId});
 
       if (response.statusCode == 200) {
         var jsonData = json.decode(utf8.decode(response.bodyBytes));
+
         if (jsonData['success'] == "true" && jsonData['data'] != null) {
           setState(() {
-            // 원본 데이터를 저장
-            originalRecords = jsonData['data'];
-            // 화면에 표시할 records를 원본 데이터로 초기화
-            records = List.from(originalRecords);
-            // SUAId 추출하여 리스트에 저장
-            suaIds = records.map((record) => record['SUAId'].toString()).toList();
-            hasRecord = records.isNotEmpty;
+            // records에 전체 데이터를 저장
+            records = List<Map<String, dynamic>>.from(jsonData['data']);
 
-            if (hasRecord) {
-              var latestRecord = records[0];
-              DateTime onTime = DateTime(
-                latestRecord['suaonTime'][0],
-                latestRecord['suaonTime'][1],
-                latestRecord['suaonTime'][2],
-                latestRecord['suaonTime'][3],
-                latestRecord['suaonTime'][4],
-                latestRecord['suaonTime'].length > 5 ? latestRecord['suaonTime'][5] : 0,
-              );
+            // suaIds에 suaid 값만 추출하여 저장
+            suaIds = records.map((record) => record['suaid'].toString()).toList();
 
-              // 최근 기록 날짜를 selectedDate로 설정
-              selectedDate = DateFormat('yyyy.MM.dd').format(onTime);
-            }
+            originalRecords = records; // 원본 데이터 저장
+            hasRecord = records.isNotEmpty; // 기록이 있는지 확인
+          });
+        } else {
+          // 데이터가 없거나 성공이 아닌 경우 처리
+          setState(() {
+            records = [];
+            suaIds = [];
+            hasRecord = false;
           });
         }
+      } else {
+        // 응답 상태가 200이 아닌 경우 처리
+        setState(() {
+          records = [];
+          suaIds = [];
+          hasRecord = false;
+        });
       }
     } catch (e) {
+      // 오류 처리
       print('Error fetching user info: $e');
     } finally {
+      // 로딩 상태 해제
       setState(() {
         isLoading = false;
       });
     }
   }
+
 
   void filterRecordsByDate() {
     if (selectedDate.isEmpty) return;
@@ -109,80 +107,17 @@ class _RecordPageState extends State<RecordPage> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.grey),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
-        ),
-        title: Column(
-          children: [
-            Text(
-              '급발진 상황 기록',
-              style: TextStyle(
-                fontSize: _getAdaptiveFontSize(context, 28),
-                fontFamily: 'head',
-                color: colorFromHex('#818585'),
-              ),
-            ),
-            GestureDetector(
-              onTap: () async {
-                DateTime? pickedDate = await showDatePicker(
-                  context: context,
-                  initialDate: selectedDate.isNotEmpty
-                      ? DateTime.parse(selectedDate.replaceAll('.', '-'))
-                      : DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime.now(),
-                );
-                if (pickedDate != null) {
-                  setState(() {
-                    selectedDate = DateFormat('yyyy.MM.dd').format(pickedDate);
-                    // 날짜 선택 후 데이터 필터링
-                    filterRecordsByDate();
-                  });
-                }
-              },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    selectedDate.isNotEmpty ? selectedDate : '날짜 선택', // 선택된 날짜로 표시
-                    style: TextStyle(
-                      fontSize: _getAdaptiveFontSize(context, 16),
-                      color: colorFromHex('#8CD8B4'),
-                    ),
-                  ),
-                  const Icon(Icons.arrow_drop_down, color: Colors.grey),
-                ],
-              ),
-            ),
-          ],
+        title: Text(
+          '급발진 기록',
+          style: TextStyle(fontSize: _getAdaptiveFontSize(context, 24)),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
-        elevation: 0,
-        actions: const [
-          Icon(Icons.notifications, color: Colors.grey),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(2),
-          child: Container(
-            height: 7,
-            color: colorFromHex('#8CD8B4'),
-          ),
-        ),
-      ),
-      drawer: DrawerWidget(
-        name: name,
-        getAdaptiveFontSize: _getAdaptiveFontSize,
+        iconTheme: const IconThemeData(color: Colors.grey),
       ),
       body: isLoading
           ? Center(
@@ -191,83 +126,111 @@ class _RecordPageState extends State<RecordPage> {
         ),
       )
           : hasRecord
-          ? PageView.builder(
+          ? ListView.builder(
         itemCount: records.length,
         itemBuilder: (context, index) {
           var record = records[index];
-          DateTime onTime = DateTime(
-            record['suaonTime'][0],
-            record['suaonTime'][1],
-            record['suaonTime'][2],
-            record['suaonTime'][3],
-            record['suaonTime'][4],
-            record['suaonTime'].length > 5 ? record['suaonTime'][5] : 0,
+          String suaId = record['suaid'].toString(); // 'suaid'로 수정
+
+          // 시작 시간 (suaonTime)
+          int startSecond = record['suaonTime'].length > 5
+              ? record['suaonTime'][5]
+              : 0;
+
+          DateTime startTime = DateTime(
+            record['suaonTime'][0], // 년
+            record['suaonTime'][1], // 월
+            record['suaonTime'][2], // 일
+            record['suaonTime'][3], // 시
+            record['suaonTime'][4], // 분
+            startSecond, // 초
           );
 
-          DateTime offTime = DateTime(
-            record['suaoffTime'][0],
-            record['suaoffTime'][1],
-            record['suaoffTime'][2],
-            record['suaoffTime'][3],
-            record['suaoffTime'][4],
-            record['suaoffTime'].length > 5 ? record['suaoffTime'][5] : 0,
+          // 종료 시간 (suaoffTime)
+          int endSecond = record['suaoffTime'].length > 5
+              ? record['suaoffTime'][5]
+              : 0;
+
+          DateTime endTime = DateTime(
+            record['suaoffTime'][0], // 년
+            record['suaoffTime'][1], // 월
+            record['suaoffTime'][2], // 일
+            record['suaoffTime'][3], // 시
+            record['suaoffTime'][4], // 분
+            endSecond, // 초
           );
 
-          String formattedOnTime = DateFormat('HH:mm:ss').format(onTime);
-          String formattedOffTime = DateFormat('HH:mm:ss').format(offTime);
-          String selectedDate = DateFormat('yyyy.MM.dd').format(onTime);
-
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 날짜와 시간을 가로로 배치
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    InfoBox(
-                      icon: Icons.calendar_today,
-                      text: selectedDate,
-                    ),
-                    InfoBox(
-                      icon: Icons.access_time,
-                      text: '$formattedOnTime ~ $formattedOffTime',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                StatBox(
-                  label: '주행 거리',
-                  value: '1.54km',
-                  color: colorFromHex('#8CD8B4'),
-                ),
-                const SizedBox(height: 16),
-                const GraphCard(
-                  title: '페달 기록',
-                  child: PedalChart(),
-                ),
-                const SizedBox(height: 16),
-                const GraphCard(
-                  title: '속도',
-                  subtitle: '평균: 165km',
-                  child: SpeedChart(),
-                ),
-              ],
+          return ListTile(
+            title: Text(
+              'SUA 기록: ${DateFormat('yyyy.MM.dd').format(startTime)} ${DateFormat('HH:mm:ss').format(startTime)} ~ ${DateFormat('HH:mm:ss').format(endTime)}',
+              style: TextStyle(fontSize: _getAdaptiveFontSize(context, 16)),
             ),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () async {
+              String selectedSUAId = suaId.toString(); // 수정된 suaId 사용
+              print('selected: $selectedSUAId');
+
+              try {
+                // API 호출
+                final response = await HttpService().postRequest("SUARecord/timestamp/list", {"SUAId": selectedSUAId});
+                print("response: $response");
+
+                if (response.statusCode == 200) {
+                  var jsonData = json.decode(response.body);
+
+                  if (jsonData['success'] == "true" && jsonData['data'] != null) {
+                    var SUAData = jsonData['data'];
+
+                    // SuaDetailPage로 데이터 전달
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SuaDetailPage(
+                          SUAId: selectedSUAId,
+                          SUAData: SUAData,
+                        ),
+                      ),
+                    );
+                  } else {
+                    _showDialog("데이터를 불러오지 못했습니다.");
+                  }
+                } else {
+                  _showDialog("서버 오류가 발생했습니다.");
+                }
+              } catch (e) {
+                print("Error fetching SUA data: $e");
+                _showDialog("데이터를 가져오는 중 문제가 발생했습니다.");
+              }
+            },
           );
         },
       )
           : Center(
         child: Text(
-          '급발진 기록이 존재하지 않습니다.',
-          style: TextStyle(
-            fontSize: _getAdaptiveFontSize(context, 24),
-            color: colorFromHex('#818585'),
-            fontWeight: FontWeight.bold,
-          ),
+          '급발진 기록이 없습니다.',
+          style: TextStyle(fontSize: _getAdaptiveFontSize(context, 18)),
         ),
       ),
+    );
+  }
+
+  void _showDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("알림"),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("확인"),
+            ),
+          ],
+        );
+      },
     );
   }
 

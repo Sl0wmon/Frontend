@@ -54,14 +54,13 @@ class _MyPageState extends State<MyPage> {
   }
 
   Future<void> deleteCar() async {
-    final data = {'userId': userId,};
-
     try {
-      final response = await HttpService().postRequest("car/delete", data);
+      final response = await HttpService().postRequest("car/delete", {"userId": userId});
 
       if (response.statusCode == 200) {
-        final responseBody = jsonDecode(response.body);
-        if (responseBody['success'] == 'true') {
+        var jsonData = json.decode(utf8.decode(response.bodyBytes));
+
+        if (jsonData['success'] == 'true') {
           print('차량 정보 삭제 완료');
           Navigator.pop(context);
           Navigator.push(
@@ -69,7 +68,7 @@ class _MyPageState extends State<MyPage> {
             MaterialPageRoute(builder: (context) => MyPage()),
           );
         } else {
-          print('삭제 실패: ${responseBody['message']}');
+          print('삭제 실패: ${jsonData['message']}');
         }
       } else {
         print('서버 오류: ${response.statusCode}');
