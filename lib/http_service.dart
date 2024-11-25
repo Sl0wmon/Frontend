@@ -2,21 +2,42 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class HttpService {
-  final String _baseUrl = "http://172.18.224.1:8080/api";
+  final String _baseUrl = "http://172.30.78.141:8080/api";
 
   String get baseUrl => _baseUrl;
 
   Future<http.Response> getRequest(String endpoint) async {
-    final url = Uri.parse('$_baseUrl/$endpoint');
-    return await http.get(url);
+    try {
+      final url = Uri.parse('$_baseUrl/$endpoint');
+      final response = await http.get(url);
+      _handleError(response);
+      return response;
+    } catch (e) {
+      print("GET Request Error: $e");
+      rethrow;
+    }
   }
 
   Future<http.Response> postRequest(String endpoint, Map<String, dynamic> body) async {
-    final url = Uri.parse('$_baseUrl/$endpoint');
-    return await http.post(
-      url,
-      body: jsonEncode(body),
-      headers: {"Content-Type": "application/json"}
-    );
+    try {
+      final url = Uri.parse('$_baseUrl/$endpoint');
+      final response = await http.post(
+        url,
+        body: jsonEncode(body),
+        headers: {"Content-Type": "application/json"},
+      );
+      _handleError(response);
+      return response;
+    } catch (e) {
+      print("POST Request Error: $e");
+      rethrow;
+    }
+  }
+
+  void _handleError(http.Response response) {
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      print("HTTP Error: ${response.statusCode} - ${response.body}");
+      throw Exception("HTTP Request failed: ${response.statusCode}");
+    }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:slomon/user_provider.dart';
 import 'DataProvider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -22,7 +23,7 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
-    fetchUserInfo(); // 사용자 정보를 가져오는 함수 호출
+    final user = Provider.of<UserProvider>(context, listen: false); // listen: false로 값을 가져옴
     timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => fetchData());
   }
 
@@ -32,33 +33,6 @@ class _DashboardPageState extends State<DashboardPage> {
     super.dispose();
   }
 
-  Future<void> fetchUserInfo() async {
-    try {
-      final url = Uri.parse('http://192.168.45.134:8080/api/user/view');
-
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({"userId": "kchh0925"}),
-      );
-
-      if (response.statusCode == 200) {
-        var jsonData = json.decode(utf8.decode(response.bodyBytes));
-
-        if (jsonData['success'] == "true" && jsonData['data'] != null) {
-          setState(() {
-            name = jsonData['data']['name'];
-          });
-        } else {
-          print('Unexpected response format: ${jsonData.toString()}');
-        }
-      } else {
-        print('Failed to load user info. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error fetching user info: $e');
-    }
-  }
 
   Future<void> fetchData() async {
     try {
