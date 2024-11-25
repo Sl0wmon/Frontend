@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-import 'package:slomon/addCarInfo_page.dart';
-import 'package:slomon/dashboard_page.dart';
-import 'package:slomon/notification_page.dart';
-import 'package:slomon/record_page.dart';
-import 'package:slomon/replacementCycle.dart';
-
-import 'obd_guide_page.dart';
+import 'drawer_widget.dart';
+import 'addCarInfo_page.dart';
+import 'user_provider.dart';
+import 'car_provider.dart';
+import 'package:provider/provider.dart';
+import 'http_service.dart';
+import 'modify_car_info_page.dart';
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -17,13 +15,10 @@ class MyPage extends StatefulWidget {
   _MyPageState createState() => _MyPageState();
 }
 
-
 class _MyPageState extends State<MyPage> {
   bool isLoading = false;
-  final Map<String, dynamic> userData = {
-    "userId": "kchh0925" // 서버에 보낼 사용자 데이터
-  };
 
+  String userId = "";
   String name = ""; // 이름 변수
   String phoneNumber = ""; // 전화번호 변수
   String carManufacturer = "";
@@ -32,56 +27,44 @@ class _MyPageState extends State<MyPage> {
   String carFuel = "";
   String carDisplacement = "";
   String carYear = "";
-  String carId = ""; // 차량 ID 저장
+  String carId = "";
 
+  @override
+  void initState() {
+    super.initState();
+    // 페이지 로드 시 데이터 가져오기
+    final user = Provider.of<UserProvider>(context, listen: false); // listen: false로 값을 가져옴
+    final car = Provider.of<CarProvider>(context, listen: false); // listen: false로 값을 가져옴
 
-  // 서버에서 데이터를 받아오는 함수
-  Future<void> fetchUserInfo() async {
-    try {
-      final url = Uri.parse('http://192.168.45.134:8080/api/user/view');
-
-      // JSON 데이터를 POST 요청에 포함
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"}, // 요청 헤더 설정
-        body: json.encode(userData), // JSON으로 변환하여 본문에 포함
-      );
-
-      if (response.statusCode == 200) {
-        // 서버로부터 받은 데이터를 파싱
-        var jsonData = json.decode(utf8.decode(response.bodyBytes));
-
-        if (jsonData['success'] == "true" && jsonData['data'] != null) {
-          setState(() {
-            name = jsonData['data']['name']; // "data" 안의 "name" 값
-            phoneNumber = jsonData['data']['phoneNumber']; // "data" 안의 "phoneNumber" 값
-          });
-        } else {
-          print('Unexpected response format: ${jsonData.toString()}');
-        }
-      } else {
-        print('Failed to load user info. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error fetching user info: $e');
-    }
+    setState(() {
+      userId = user.userId ?? "";
+      name = user.name != null ? utf8.decode(user.name!.codeUnits) : ""; // UTF-8 디코딩 적용
+      phoneNumber = user.phoneNumber ?? ""; // UserProvider에서 phoneNumber 가져오기
+      carManufacturer = utf8.decode(car.manufacturer.codeUnits); // UTF-8 디코딩 적용
+      carSize = utf8.decode(car.size.codeUnits); // UTF-8 디코딩 적용
+      carType = utf8.decode(car.model.codeUnits); // 외형 (model) UTF-8 디코딩 적용
+      carFuel = car.fuel;
+      carDisplacement = car.displacement;
+      carYear = car.year.toString(); // year는 int, 문자열로 변환
+      carId = car.carId;
+    });
   }
 
   Future<void> deleteCar() async {
-    final url = Uri.parse('http://192.168.45.134:8080/api/car/delete');
-    final headers = {'Content-Type': 'application/json'};
-    final body = jsonEncode({
-      'userId': userData['userId'],
-    });
+    final data = {'userId': userId,};
 
     try {
-      final response = await http.post(url, headers: headers, body: body);
+      final response = await HttpService().postRequest("car/delete", data);
+
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
-        if (responseBody['status'] == 'true') {
+        if (responseBody['success'] == 'true') {
           print('차량 정보 삭제 완료');
-          // 차량 삭제 후 최신 정보를 다시 가져오기
-          fetchCarInfo();
+          Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => MyPage()),
+          );
         } else {
           print('삭제 실패: ${responseBody['message']}');
         }
@@ -93,181 +76,12 @@ class _MyPageState extends State<MyPage> {
     }
   }
 
-
-  Future<void> fetchCarInfo() async {
-
-    setState(() {
-      isLoading = true; // 로딩 시작
-    });
-
-    try {
-      final response = await http.post(
-        Uri.parse('http://192.168.45.134:8080/api/car/view/user'),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"userId": "kchh0925"}), // 사용자 ID로 차량 정보 조회
-      );
-
-      if (response.statusCode == 200) {
-        // UTF-8 디코딩 적용
-        var jsonData = json.decode(utf8.decode(response.bodyBytes));
-
-        if (jsonData['success'] == "true" && jsonData['data'] != null) {
-          List<dynamic> carDataList = jsonData['data'];
-          if (carDataList.isNotEmpty) {
-            var carData = carDataList[0];
-            setState(() {
-              carManufacturer = carData['manufacturer'] ?? "정보 없음";
-              carSize = carData['size'] ?? "정보 없음";
-              carType = carData['model'] ?? "정보 없음";
-              carFuel = carData['fuel'] ?? "정보 없음";
-              carDisplacement = carData['displacement'] ?? "정보 없음";
-              carYear = carData['year']?.toString() ?? "정보 없음";
-            });
-          } else {
-            setState(() {
-              // 차량이 없으면 값 초기화
-              carManufacturer = "정보 없음";
-              carSize = "정보 없음";
-              carType = "정보 없음";
-              carFuel = "정보 없음";
-              carDisplacement = "정보 없음";
-              carYear = "정보 없음";
-            });
-            print("차량 정보가 없습니다.");
-          }
-        } else {
-          print("응답 형식이 잘못되었습니다.");
-        }
-      } else {
-        throw Exception('Failed to load car info');
-      }
-    } catch (e) {
-      print('Error: $e');
-    }
-  }
-
-
-  @override
-  void initState() {
-    super.initState();
-    fetchCarInfo();
-    fetchUserInfo();
-    // 페이지 로드 시 데이터 가져오기
-  }
-
   double _getAdaptiveFontSize(BuildContext context, double size) {
     final screenSize = MediaQuery.of(context).size;
     final aspectRatio = screenSize.width / screenSize.height;
     const baseAspectRatio = 375.0 / 667.0;
     return size * (aspectRatio / baseAspectRatio) *
         MediaQuery.of(context).textScaleFactor;
-  }
-
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(
-              color: Color(0xFF8CD8B4),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '사이드 메뉴',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: _getAdaptiveFontSize(context, 24),
-                    fontFamily: 'head',
-                  ),
-                ),
-                const SizedBox(height: 40), // 사이드 메뉴와 이름 간격 조정
-                Row(
-                  children: [
-                    // 프로필 이미지 위치
-                    Container(
-                      width: 35,
-                      height: 35,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: AssetImage('assets/images/profile.png'), // 이미지 경로 지정
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10), // 이미지와 텍스트 간격 조정
-                    Expanded(
-                      child: Text(
-                        '$name님', // 이름 텍스트 표시
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: _getAdaptiveFontSize(context, 18),
-                            fontFamily: 'body',
-                            fontWeight: FontWeight.bold
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                            context, MaterialPageRoute(builder: (context) => const MyPage())
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          _buildDrawerItem(context, "대시보드", Icons.dashboard, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => const DashboardPage())
-            );
-          }),
-          _buildDrawerItem(context, "급발진 상황 기록", Icons.history, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => const RecordPage()));
-          }),
-          _buildDrawerItem(context, "차량 부품 교체 주기", Icons.car_repair, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => ReplacementCyclePage()));
-          }),
-          _buildDrawerItem(context, "OBD 진단 가이드", Icons.info, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => const ObdGuidePage()));
-          }),
-          _buildDrawerItem(context, "알림", Icons.notifications, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => NotificationPage()));
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem(
-      BuildContext context, String title, IconData icon, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: const Color(0xFF8CD8B4)),
-      title: Text(
-        title,
-        style: const TextStyle(fontFamily: 'body'),
-      ),
-      onTap: onTap,
-    );
   }
 
   @override
@@ -304,7 +118,10 @@ class _MyPageState extends State<MyPage> {
           ),
         ),
       ),
-      drawer: _buildDrawer(context),
+      drawer: DrawerWidget(
+        name: name,
+        getAdaptiveFontSize: _getAdaptiveFontSize,
+      ),
       body: Container(
         color: Colors.grey[200], // 전체 배경 회색 설정
         child: Column(
@@ -367,7 +184,7 @@ class _MyPageState extends State<MyPage> {
                     ),
 
                     const SizedBox(height: 16),
-                    // 차량 정보 박스
+                    // 차량 정보 박스 수정
                     Container(
                       padding: const EdgeInsets.all(16.0),
                       decoration: BoxDecoration(
@@ -398,10 +215,19 @@ class _MyPageState extends State<MyPage> {
                               ElevatedButton(
                                 onPressed: () {
                                   // 차량 정보 등록 또는 수정 페이지로 이동
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => const AddCarInfoPage()), // AddCarInfoPage로 이동
-                                  );
+                                  if (carManufacturer.isEmpty) {
+                                    // 차량 정보가 없을 때
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const AddCarInfoPage()),
+                                    );
+                                  } else {
+                                    // 차량 정보가 있을 때
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const ModifyCarInfoPage()),
+                                    );
+                                  }
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF8CD8B4),
@@ -410,7 +236,7 @@ class _MyPageState extends State<MyPage> {
                                   ),
                                 ),
                                 child: Text(
-                                  carManufacturer == "정보 없음" ? "등록" : "수정",
+                                  carManufacturer.isEmpty ? "등록" : "수정",
                                   style: const TextStyle(
                                     fontFamily: 'body',
                                     color: Colors.white,
@@ -422,7 +248,7 @@ class _MyPageState extends State<MyPage> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          carManufacturer == "정보 없음"
+                          carManufacturer.isEmpty
                               ? const Center(
                             child: Text(
                               "등록된 차량 정보가 없습니다.",
@@ -460,38 +286,33 @@ class _MyPageState extends State<MyPage> {
                                           ),
                                         ),
                                         const Spacer(),
-                                        Row(
-                                          children: [
-                                            const SizedBox(width: 8),
-                                            ElevatedButton(
-                                              onPressed: () async {
-                                                await deleteCar();
-                                                setState(() {
-                                                  carManufacturer = "정보 없음";
-                                                  carSize = "정보 없음";
-                                                  carType = "정보 없음";
-                                                  carFuel = "정보 없음";
-                                                  carDisplacement = "정보 없음";
-                                                  carYear = "정보 없음";
-                                                });
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(0xFFF9A7A7),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(20.0),
-                                                ),
-                                              ),
-                                              child: const Text(
-                                                "삭제",
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontFamily: 'body',
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 17,
-                                                ),
-                                              ),
+                                        ElevatedButton(
+                                          onPressed: () async {
+                                            await deleteCar();
+                                            setState(() {
+                                              carManufacturer = "";
+                                              carSize = "";
+                                              carType = "";
+                                              carFuel = "";
+                                              carDisplacement = "";
+                                              carYear = "";
+                                            });
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(0xFFF9A7A7),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(20.0),
                                             ),
-                                          ],
+                                          ),
+                                          child: const Text(
+                                            "삭제",
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontFamily: 'body',
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 17,
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -647,5 +468,13 @@ class _MyPageState extends State<MyPage> {
         ),
       ),
     );
+  }
+
+  Color colorFromHex(String hexColor) {
+    hexColor = hexColor.replaceAll('#', '');
+    if (hexColor.length == 6) {
+      hexColor = 'FF$hexColor';
+    }
+    return Color(int.parse('0x$hexColor'));
   }
 }

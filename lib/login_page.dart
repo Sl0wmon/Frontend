@@ -96,11 +96,11 @@ class _LoginPageState extends State<LoginPage> {
                     'displacement': "",
                     'year': 0,
                   });
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const DashboardPage()),
-                  );
                 }
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const DashboardPage()),
+                );
               } else {
                 _showDialog("차량 정보 조회 서버 오류가 발생했습니다.");
               }

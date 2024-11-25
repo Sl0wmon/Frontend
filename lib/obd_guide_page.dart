@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'dashboard_page.dart';
-import 'record_page.dart';
+import 'package:provider/provider.dart';
 import 'http_service.dart';
+import 'car_provider.dart';
+import 'user_provider.dart';
+import 'drawer_widget.dart';
 
 class ObdGuidePage extends StatefulWidget {
   const ObdGuidePage({super.key});
@@ -14,6 +16,21 @@ class ObdGuidePage extends StatefulWidget {
 class _ObdGuidePageState extends State<ObdGuidePage> {
   final List<Map<String, String>> diagnosticResults = [];
   final TextEditingController _errCodeController = TextEditingController();
+  String name = ""; // 이름 변수
+  String carType = "";
+
+  @override
+  void initState() {
+    super.initState();
+    // UserProvider에서 name 가져오기
+    final user = Provider.of<UserProvider>(context, listen: false);
+    final car = Provider.of<CarProvider>(context, listen: false);
+    setState(() {
+      // name을 UTF-8로 디코딩하여 처리
+      name = user.name?.isNotEmpty == true ? utf8.decode(user.name!.runes.toList()) : '';
+      carType = car.manufacturer;
+    });
+  }
 
   double _getAdaptiveFontSize(BuildContext context, double size) {
     final screenSize = MediaQuery.of(context).size;
@@ -33,7 +50,10 @@ class _ObdGuidePageState extends State<ObdGuidePage> {
       return;
     }
 
-    final codeData = {"errCode": errCode};
+    final codeData = {
+      "errCode": errCode,
+      "carType": carType,
+    };
 
     try {
       final response = await HttpService().postRequest("guide/search/code", codeData);
@@ -48,16 +68,16 @@ class _ObdGuidePageState extends State<ObdGuidePage> {
               String errCodeFromApi = item['errCode'] ?? '알 수 없음';
               String description = item['description'] ?? '설명 없음';
 
-              // "errCode"는 첫 번째 부분만 가져오고, 나머지는 "description"으로 처리
-              final codeMatch = RegExp(r'^[A-Z0-9]+').firstMatch(errCodeFromApi);
-              String code = codeMatch != null ? codeMatch.group(0)! : '알 수 없음';
-
-              // "description"은 코드 뒤의 부분을 사용
-              String desc = '${errCodeFromApi.replaceFirst(code, '').trim()} $description';
+              // 숫자+알파벳 코드와 설명 부분 분리
+              final codeMatch = RegExp(r'^([A-Z0-9, 또는]+)\s+(.+)$').firstMatch(errCodeFromApi);
+              if (codeMatch != null) {
+                errCodeFromApi = codeMatch.group(1)!.trim(); // 코드 부분
+                description = codeMatch.group(2)!.trim();   // 설명 부분
+              }
 
               diagnosticResults.add({
-                "code": code,
-                "description": desc,
+                "code": errCodeFromApi,
+                "description": description,
               });
             }
           });
@@ -80,8 +100,6 @@ class _ObdGuidePageState extends State<ObdGuidePage> {
 
   @override
   Widget build(BuildContext context) {
-    final searchQuery = _errCodeController.text.trim();
-
     return Scaffold(
       backgroundColor: colorFromHex('#ECECEC'),
       appBar: AppBar(
@@ -118,7 +136,10 @@ class _ObdGuidePageState extends State<ObdGuidePage> {
           ),
         ),
       ),
-      drawer: _buildDrawer(context),
+      drawer: DrawerWidget(
+        name: name,
+        getAdaptiveFontSize: _getAdaptiveFontSize,
+      ),
       body: Column(
         children: [
           Padding(
@@ -139,165 +160,58 @@ class _ObdGuidePageState extends State<ObdGuidePage> {
                   onPressed: fetchData,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: colorFromHex('#D8D8D8'),
-                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: colorFromHex('#8CD8B4'),
-                    width: 2,
-                  ),
-                ),
+              ),
+              style: TextStyle(
+                fontFamily: 'body',
+                fontSize: _getAdaptiveFontSize(context, 16),
               ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            alignment: Alignment.centerLeft,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 동적으로 검색어에 맞는 "검색 결과" 제목
-                Text(
-                  searchQuery.isEmpty
-                      ? "검색 결과"
-                      : '"$searchQuery" 검색 결과',
-                  style: TextStyle(
-                    fontFamily: 'head',
-                    fontSize: _getAdaptiveFontSize(context, 24),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Divider(
-                  color: colorFromHex('#8CD8B4'),
-                  thickness: 2,
-                  endIndent: MediaQuery.of(context).size.width * 0.7,
-                ),
-              ],
-            ),
-          ),
+          // 진단 결과 리스트
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: diagnosticResults.isEmpty
-                  ? Center(
-                child: Text(
-                  "조회된 결과가 없습니다.",
-                  style: TextStyle(
-                    fontFamily: 'body',
-                    fontSize: _getAdaptiveFontSize(context, 18),
-                    color: colorFromHex('#6D6D6D'),
-                  ),
-                ),
-              )
-                  : ListView.builder(
-                itemCount: diagnosticResults.length,
-                itemBuilder: (context, index) {
-                  final result = diagnosticResults[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            spreadRadius: 1,
-                            blurRadius: 5,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+            child: ListView.builder(
+              itemCount: diagnosticResults.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                  padding: const EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white, // 배경 색상을 흰색으로 설정
+                    borderRadius: BorderRadius.circular(8.0), // 모서리를 둥글게 설정
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2), // 살짝 아래쪽으로 그림자
                       ),
-                      child: ListTile(
-                        contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16.0),
-                        title: Text(
-                          result["code"]!,
-                          style: TextStyle(
-                            fontFamily: 'head',
-                            fontWeight: FontWeight.bold,
-                            fontSize: _getAdaptiveFontSize(context, 20),
-                            color: colorFromHex('#000000'),
-                          ),
-                        ),
-                        subtitle: Text(
-                          result["description"]!,
-                          style: TextStyle(
-                            fontFamily: 'body',
-                            fontSize: _getAdaptiveFontSize(context, 16),
-                            color: colorFromHex('#6D6D6D'),
-                          ),
-                        ),
-                        trailing: Icon(
-                          Icons.arrow_forward_ios,
-                          color: colorFromHex('#8CD8B4'),
-                          size: 16,
-                        ),
+                    ],
+                  ),
+                  child: ListTile(
+                    title: Text(
+                      diagnosticResults[index]['code']!,
+                      style: TextStyle(
+                        fontFamily: 'body',
+                        fontSize: _getAdaptiveFontSize(context, 22),
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  );
-                },
-              ),
+                    subtitle: Text(
+                      diagnosticResults[index]['description']!,
+                      style: TextStyle(
+                        fontFamily: 'body',
+                        fontSize: _getAdaptiveFontSize(context, 18),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: colorFromHex('#8CD8B4'),
-            ),
-            child: Text(
-              '사이드 메뉴',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: _getAdaptiveFontSize(context, 24),
-                fontFamily: 'head',
-              ),
-            ),
-          ),
-          _buildDrawerItem(context, "대시보드", Icons.dashboard, () {
-            Navigator.pop(context);
-            Navigator.push(
-              context, MaterialPageRoute(builder: (context) => const DashboardPage()),
-            );
-          }),
-          _buildDrawerItem(context, "급발진 상황 기록", Icons.history, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => const RecordPage()));
-          }),
-          _buildDrawerItem(context, "차량 부품 교체 주기", Icons.autorenew, () {}),
-          _buildDrawerItem(context, "OBD 진단 가이드", Icons.support, () {}),
-          _buildDrawerItem(context, "알림", Icons.notifications, () {}),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem(BuildContext context, String title, IconData icon, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: colorFromHex('#8CD8B4')),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontFamily: 'body',
-          fontSize: _getAdaptiveFontSize(context, 18),
-          color: colorFromHex('#8CD8B4'),
-        ),
-      ),
-      onTap: onTap,
     );
   }
 

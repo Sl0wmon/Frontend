@@ -192,6 +192,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ),
       ),
+      // 여기다가 사이드 메뉴 위젯 추가하면 됨.
       drawer: _buildDrawer(context),
       body: isLoading
           ? _buildLoadingIndicator()
@@ -595,8 +596,4 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
-
-
-
-
 }
