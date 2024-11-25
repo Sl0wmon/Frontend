@@ -15,6 +15,8 @@ class NotificationPage extends StatefulWidget {
 
 
 class _NotificationPageState extends State<NotificationPage> {
+  String receivedData = "";
+
   @override
   final Map<String, dynamic> userData = {
     "userId": "test"// 서버에 보낼 사용자 데이터

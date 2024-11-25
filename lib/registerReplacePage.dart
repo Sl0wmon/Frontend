@@ -18,6 +18,8 @@ class RegisterReplacePage extends StatefulWidget {
 
 
 class _ReplacementCyclePageState extends State<RegisterReplacePage> {
+  String receivedData = "";
+
   @override
   final Map<String, dynamic> userData = {
     "userId": "kchh0925"// 서버에 보낼 사용자 데이터

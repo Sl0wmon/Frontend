@@ -21,6 +21,8 @@ class RecordPage extends StatefulWidget {
 }
 
 class _RecordPageState extends State<RecordPage> {
+  String receivedData = "";
+
   String selectedDate = '2024.09.04'; // 초기 날짜 설정
 
   final Map<String, dynamic> userData = {

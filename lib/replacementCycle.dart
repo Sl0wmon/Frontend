@@ -18,6 +18,8 @@ class ReplacementCyclePage extends StatefulWidget {
 
 
 class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
+  String receivedData = "";
+
   // 각 박스의 데이터를 리스트로 관리
   final List<Map<String, dynamic>> boxData = [
     {'title': '엔진 오일', 'remainingDistance': '300.10km', 'lastReplacement': '2024-01-10', 'widthFactor': 1.0},

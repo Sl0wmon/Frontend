@@ -17,6 +17,8 @@ class MyPage extends StatefulWidget {
 
 
 class _MyPageState extends State<MyPage> {
+  String receivedData = "";
+
   bool isLoading = false;
   final Map<String, dynamic> userData = {
     "userId": "kchh0925" // 서버에 보낼 사용자 데이터

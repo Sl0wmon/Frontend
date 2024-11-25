@@ -3,6 +3,8 @@ import 'package:slomon/dashboard_page.dart';
 import 'record_page.dart';
 
 class ObdGuidePage extends StatelessWidget {
+  String receivedData = "";
+
   final List<Map<String, String>> diagnosticResults = [
     {"code": "B1102", "description": "에어백 배터리 전압 낮음"},
     {"code": "B1214", "description": "후방 좌측 센서 고장"},

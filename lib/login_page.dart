@@ -7,9 +7,12 @@ import 'dart:convert';
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
+
 }
 
 class _LoginPageState extends State<LoginPage> {
+  String receivedData = "";
+
   final _formKey = GlobalKey<FormState>();
   String? _userId;  // userId로 변경
   String? _password;
@@ -30,10 +33,11 @@ class _LoginPageState extends State<LoginPage> {
         // 로그인 성공 시
         if (data['success'] == "true") {
           if (data['data'] == true) {
+
             // 로그인 성공 후 DashboardPage로 이동
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => DashboardPage()),
+              MaterialPageRoute(builder: (context) => DashboardPage(  )),
             );
           } else {
             // 아이디와 비밀번호 오류 표시
