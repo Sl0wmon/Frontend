@@ -76,8 +76,10 @@ class _DashboardPageState extends State<DashboardPage> {
     Color alertColor = const Color(0xFFF39393);
 
     switch (title) {
+      case 'RPM':
+        return value > 6000 ? alertColor :defaultColor;
       case '속도':
-        return value > 80 ? alertColor : defaultColor;
+        return value > 130 ? alertColor : defaultColor;
       case '냉각수 온도':
         return value > 100 ? alertColor : defaultColor;
       case '흡기 온도':
