@@ -43,6 +43,14 @@ class _DashboardPageState extends State<DashboardPage> {
 
       if (response.statusCode == 200) {
         var jsonData = json.decode(response.body);
+
+        // 데이터가 'ping'일 경우 무시하고 return
+        if (jsonData['data'] == "ping") {
+          print("Received ping. Keeping existing data.");
+          return;
+        }
+
+        // 유효한 데이터일 경우에만 상태 업데이트
         if (jsonData['success'] == "true" && jsonData['data'] != null) {
           Provider.of<DataProvider>(context, listen: false).updateData(jsonData['data']);
         } else {
@@ -55,6 +63,8 @@ class _DashboardPageState extends State<DashboardPage> {
       print('Error fetching dashboard data: $e');
     }
   }
+
+
 
   Color _getCardColor(String title, [double value = 0]) {
     Color defaultColor = const Color(0xFF8CD8B4);
