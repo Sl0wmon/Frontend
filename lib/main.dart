@@ -6,6 +6,7 @@ import 'package:slomon/notification_page.dart';
 import 'package:slomon/registerReplacePage.dart';
 import 'package:slomon/replacementCycle.dart';
 import 'DataProvider.dart';
+import 'SUAProvider.dart';
 import 'record_page.dart';
 import 'dashboard_page.dart';
 import 'login_page.dart';
@@ -20,6 +21,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => DataProvider()), // DataProvider 등록
         ChangeNotifierProvider(create: (_) => UserProvider()), // UserProvider 등록
         ChangeNotifierProvider(create: (_) => CarProvider()),  // CarProvider 등록
+        ChangeNotifierProvider(create: (_) => Suaprovider()),
       ],
       child: const MyApp(),
     ),

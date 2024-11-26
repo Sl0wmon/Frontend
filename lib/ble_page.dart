@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:provider/provider.dart';
+import 'package:slomon/SUAProvider.dart';
 import 'package:slomon/dashboard_page.dart';
 import 'DataProvider.dart';
 
@@ -23,6 +24,22 @@ class _BluetoothPageState extends State<BluetoothPage> {
     discoverDevices();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<DataProvider>(context, listen: false).updateData({
+        "Speed": "0.0",
+        "RPM": "0.0",
+        "CoolantTemp": "0.0",
+        "IntakeTemp": "0.0",
+        "EngineLoad": "0.0",
+        "IntakePressure": "0.0",
+        "PressureValues": {
+          "acc": "0",
+          "brk": "0",
+        },
+      });
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<Suaprovider>(context, listen: false).updateData({
+        "timeStamp":"2024-11-26T09:03:24",
+        "SUA":"false",
         "Speed": "0.0",
         "RPM": "0.0",
         "CoolantTemp": "0.0",
@@ -95,9 +112,21 @@ class _BluetoothPageState extends State<BluetoothPage> {
     connection!.input?.listen((Uint8List data) {
       String bluetoothData = String.fromCharCodes(data).trim();
       Map<String, dynamic> parsedData = parseBluetoothData(bluetoothData);
+
+      // DataProvider 업데이트
       Provider.of<DataProvider>(context, listen: false).updateData(parsedData);
-      print("Received Bluetooth Data: $bluetoothData");
+
+      // SUAProvider 업데이트
+      Provider.of<Suaprovider>(context, listen: false).updateData(parsedData);
+
+      // 콘솔에 parsedData 출력
       print("Parsed Data: $parsedData");
+
+      // SUAProvider 값 가져오기
+      final suaProviderData = Provider.of<Suaprovider>(context, listen: false).data;
+
+      // 콘솔에 SUAProvider 값 출력
+      print("SUAProvider Data: $suaProviderData");
     }, onError: (error) {
       print("Error while receiving data: $error");
       disconnect();
@@ -106,6 +135,7 @@ class _BluetoothPageState extends State<BluetoothPage> {
       disconnect();
     });
   }
+
 
   void disconnect() {
     connection?.dispose();
@@ -121,6 +151,8 @@ class _BluetoothPageState extends State<BluetoothPage> {
 
   Map<String, dynamic> parseBluetoothData(String rawData) {
     Map<String, dynamic> parsedData = {
+      "timeStamp": "",
+      "SUA": "false",
       "Speed": "0.0",
       "RPM": "0.0",
       "CoolantTemp": "0.0",
@@ -133,15 +165,26 @@ class _BluetoothPageState extends State<BluetoothPage> {
       },
     };
 
+    // 쉼표로 데이터 분리
     List<String> pairs = rawData.split(", ");
+    for (int i = 0; i < pairs.length; i++) {
+      String pair = pairs[i];
 
-    for (String pair in pairs) {
+      // 첫 번째 항목이 타임스탬프인지 확인
+      if (i == 0 && pair.contains("T")) {
+        parsedData["timeStamp"] = pair.trim(); // timeStamp 추출
+        continue;
+      }
+
+      // 키와 값으로 분리
       List<String> keyValue = pair.split(":");
       if (keyValue.length == 2) {
         String key = keyValue[0].trim();
         String value = keyValue[1].trim();
 
-        if (key == "Pressure acc") {
+        if (key == "sua") {
+          parsedData["SUA"] = value;
+        } else if (key == "Pressure acc") {
           parsedData["PressureValues"]["acc"] = value;
         } else if (key == "Pressure brk") {
           parsedData["PressureValues"]["brk"] = value;
@@ -163,6 +206,8 @@ class _BluetoothPageState extends State<BluetoothPage> {
 
     return parsedData;
   }
+
+
 
   @override
   void dispose() {
