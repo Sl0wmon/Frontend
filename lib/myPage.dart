@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'ble_page.dart';
 import 'drawer_widget.dart';
 import 'addCarInfo_page.dart';
 import 'user_provider.dart';
@@ -412,7 +413,7 @@ class _MyPageState extends State<MyPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text(
-                                "제품 정보",
+                                "장치 연결", // 텍스트 변경
                                 style: TextStyle(
                                   fontSize: 23,
                                   fontWeight: FontWeight.bold,
@@ -421,22 +422,15 @@ class _MyPageState extends State<MyPage> {
                               ),
                               Row(
                                 children: [
-                                  ElevatedButton(
-                                    onPressed: () {},
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20.0),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      "삭제",
-                                      style: TextStyle(color: Color(0xFF60BF92), fontFamily: 'body', fontWeight: FontWeight.bold, fontSize:17),
-                                    ),
-                                  ),
                                   const SizedBox(width: 8),
                                   ElevatedButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      // 등록 버튼 누르면 BluetoothPage로 이동
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => BluetoothPage()),
+                                      );
+                                    },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFF8CD8B4),
                                       shape: RoundedRectangleBorder(
@@ -445,7 +439,12 @@ class _MyPageState extends State<MyPage> {
                                     ),
                                     child: const Text(
                                       "등록",
-                                      style: TextStyle(color: Colors.white, fontFamily: 'body', fontWeight: FontWeight.bold, fontSize:17),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontFamily: 'body',
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 17,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -453,26 +452,7 @@ class _MyPageState extends State<MyPage> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          // 연두색 박스
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(16.0),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF8CD8B4), // 연두색
-                              borderRadius: BorderRadius.circular(20.0),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                "1111 - 1111 - 1111 - 1111",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  fontFamily: 'body', // 'body' 폰트 적용
-                                ),
-                              ),
-                            ),
-                          ),
+                          // 연두색 박스 제거
                         ],
                       ),
                     ),

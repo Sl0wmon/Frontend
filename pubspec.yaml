@@ -28,6 +28,8 @@ dependencies:
   # ScopedModel 상태 관리 패키지
   scoped_model: ^2.0.0
 
+  permission_handler: ^11.3.1
+
 
 dev_dependencies:
   flutter_test:

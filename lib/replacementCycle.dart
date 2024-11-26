@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:slomon/dashboard_page.dart';
 import 'package:slomon/record_page.dart';
 import 'package:http/http.dart' as http;
+import 'package:slomon/registerReplacePage.dart';
 import 'package:slomon/user_provider.dart';
 
 import 'car_provider.dart';
@@ -13,17 +15,19 @@ import 'myPage.dart';
 import 'notification_page.dart';
 import 'obd_guide_page.dart';
 
-
 class ReplacementCyclePage extends StatefulWidget {
   @override
   _ReplacementCyclePageState createState() => _ReplacementCyclePageState();
 }
 
-
-
 class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
   String carId = ""; // carId를 저장할 변수
   String receivedData = "";
+
+
+  String name = ""; // 이름 변수
+  String userId = "";
+  String phone = ""; // 이름 변수
 
   // 각 박스의 데이터를 리스트로 관리
   List<Map<String, dynamic>> boxData = [
@@ -48,23 +52,30 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
     "carId": "KGM31231732467313341" // 서버에 보낼 차량 데이터
   };
 
-  String name = ""; // 이름 변수
-  String phone = ""; // 이름 변수
 
-  Future<void> addNotification(String userId, String title) async {
+  Future<void> addNotification(String? userId, String? title) async {
+    if (userId == null || title == null) {
+      print("알림 추가 실패: userId 또는 title이 null입니다.");
+      return;
+    }
+
     try {
-      final url = Uri.parse('http://192.168.45.134:8080/api/notification/add');
+      final url = Uri.parse('http://172.30.78.141:8080/api/notification/add');
       final notificationData = {
         "userId": userId,
-        "notificationTime": DateTime.now().toIso8601String(), // 현재 시간
-        "code": null,
+        "notificationTime": DateTime.now().toIso8601String().split('.').first, // 초 단위까지만 포함
+        "code": "", // null 대신 빈 문자열
         "title": "$title의 부품 교체 주기 100% 달성!",
         "content": "$title를 교체 해 주세요!"
       };
 
+      print("Notification Data Request: ${json.encode(notificationData)}");
+
       final response = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: json.encode(notificationData),
       );
 
@@ -72,11 +83,55 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
         print('Notification added successfully.');
       } else {
         print('Failed to add notification. Status code: ${response.statusCode}');
+        print('Response body: ${response.body}');
       }
     } catch (e) {
       print('Error adding notification: $e');
     }
   }
+
+
+
+
+
+  void checkReplacementCycles(Map<String, dynamic> consumableData) {
+    const maxDistances = {
+      'engineOil': 5000,
+      'transmissionOil': 40000,
+      'brake': 25000,
+      'clutch': 40000,
+      'steering': 55000,
+      'coolant': 45000,
+      'fuelFilter': 40000,
+      'heaterFilter': 12000,
+      'airconFilter': 17500,
+      'brakeLining': 35000,
+      'brakePadFront': 25000,
+      'brakePadBack': 45000,
+      'wheelAlignment': 20000,
+      'ignitionPlug': 45000,
+      'battery': 50000,
+      'outerBelt': 35000,
+      'timing': 90000,
+    };
+
+    bool hasExceededParts = false; // 초과한 부품 여부 플래그
+
+    maxDistances.forEach((key, maxValue) {
+      double currentMileage = consumableData['${key}Mileage'] ?? 0.0;
+      if (currentMileage >= maxValue) {
+        hasExceededParts = true;
+        String partName = _getPartNameFromKey(key);
+        print("부품 초과: $partName (현재 주행 거리: ${currentMileage.toInt()}km, 최대 거리: $maxValue km)");
+        addNotification(userId, partName); // 알림 추가
+      }
+    });
+
+    if (!hasExceededParts) {
+      print("해당 조건을 만족하는 부품이 없습니다.");
+    }
+  }
+
 
   Future<void> fetchConsumableData() async {
     try {
@@ -87,116 +142,57 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
-        print("Response data from server: $jsonData"); // 서버에서 받은 전체 데이터 출력
+        print("Response data from server: $jsonData");
 
         if (jsonData['success'] == "true" && jsonData['data'] != null) {
           final consumableData = jsonData['data'];
-          print("Consumable data from server: $consumableData"); // 서버에서 받은 consumable 데이터 출력
+
+          const maxDistances = {
+            'engineOil': 5000,
+            'transmissionOil': 40000,
+            'brake': 25000,
+            'clutch': 40000,
+            'steering': 55000,
+            'coolant': 45000,
+            'fuelFilter': 40000,
+            'heaterFilter': 12000,
+            'airconFilter': 17500,
+            'brakeLining': 35000,
+            'brakePadFront': 25000,
+            'brakePadBack': 45000,
+            'wheelAlignment': 20000,
+            'ignitionPlug': 45000,
+            'battery': 50000,
+            'outerBelt': 35000,
+            'timing': 90000,
+          };
 
           setState(() {
-            // 서버에서 받은 데이터를 boxData 형식으로 변환
-            boxData = [
-              {
-                'title': '엔진 오일',
-                'remainingDistance': '${consumableData['engineOilMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['engineOilLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['engineOilMileage'] ?? 0.0) / 100.0,
-              },
-              {
-                'title': '미션오일',
-                'remainingDistance': '${consumableData['missionOilMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['missionOilLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['missionOilMileage'] ?? 0.0) / 100.0,
-              },
-              {
-                'title': '브레이크',
-                'remainingDistance': '${consumableData['brakeMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['brakeLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['brakeMileage'] ?? 0.0) / 100.0,
-              },
-              {
-                'title': '클러치',
-                'remainingDistance': '${consumableData['clutchMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['clutchLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['clutchMileage'] ?? 0.0) / 100.0,
-              },
-              {
-                'title': '파워스티어링',
-                'remainingDistance': '${consumableData['steeringMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['steeringLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['steeringMileage'] ?? 0.0) / 100.0,
-              },
-              {
-                'title': '냉각수',
-                'remainingDistance': '${consumableData['coolantMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['coolantLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['coolantMileage'] ?? 0.0) / 100.0,
-              },
-              {
-                'title': '연료 필터',
-                'remainingDistance': '${consumableData['fuelFilterMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['fuelFilterLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['fuelFilterMileage'] ?? 0.0) / 100.0,
-              },
-              {
-                'title': '히터 필터',
-                'remainingDistance': '${consumableData['heaterFilterMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['heaterFilterLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['heaterFilterMileage'] ?? 0.0) / 100.0,
-              },
-              {
-                'title': '에어컨 필터',
-                'remainingDistance': '${consumableData['conditionerFilterMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['conditionerFilterLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['conditionerFilterMileage'] ?? 0.0) / 100.0,
-              },
-              {
-                'title': '브레이크 라이닝',
-                'remainingDistance': '${consumableData['brakeLiningMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['brakeLiningLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['brakeLiningMileage'] ?? 0.0) / 100.0,
-              },
-              {
-                'title': '브레이크 패드',
-                'remainingDistance': '${consumableData['brakePadFrontMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['brakePadFrontLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['brakePadFrontMileage'] ?? 0.0) / 100.0,
-              },
-              {
-                'title': '휠 얼라이먼트',
-                'remainingDistance': '${consumableData['wheelAlignmentMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['wheelAlignmentLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['wheelAlignmentMileage'] ?? 0.0) / 100.0,
-              },
-              {
-                'title': '점화플러그',
-                'remainingDistance': '${consumableData['ignitionPlugMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['ignitionPlugLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['ignitionPlugMileage'] ?? 0.0) / 100.0,
-              },
-              {
-                'title': '배터리',
-                'remainingDistance': '${consumableData['batteryMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['batteryLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['batteryMileage'] ?? 0.0) / 100.0,
-              },
-              {
-                'title': '걸 벨트',
-                'remainingDistance': '${consumableData['outerBeltMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['outerBeltLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['outerBeltMileage'] ?? 0.0) / 100.0,
-              },
-              {
-                'title': '타이밍',
-                'remainingDistance': '${consumableData['timingBeltMileage'] ?? 0.0}km',
-                'lastReplacement': formatDate(consumableData['timingBeltLast'] ?? [0, 0, 0]),
-                'widthFactor': (consumableData['timingBeltMileage'] ?? 0.0) / 100.0,
-              },
-            ];
-            print("Updated boxData: $boxData"); // boxData 업데이트 확인
+            boxData = maxDistances.entries.map((entry) {
+              final key = entry.key;
+              final maxValue = entry.value;
+
+              // 현재 mileage를 가져옵니다.
+              final currentMileage = consumableData['${key}Mileage'] ?? 0.0;
+              final lastReplacement = consumableData['${key}Last'] ?? [0, 0, 0];
+
+              // widthFactor를 계산합니다. maxValue를 초과하면 1.0으로 강제 설정합니다.
+              final widthFactor = currentMileage >= maxValue
+                  ? 1.0
+                  : (currentMileage / maxValue);
+
+              return {
+                'title': _getPartNameFromKey(key),
+                'remainingDistance': '${currentMileage.toInt()}km',
+                'lastReplacement': formatDate(lastReplacement),
+                'widthFactor': widthFactor,
+              };
+            }).toList();
           });
+
+          checkReplacementCycles(consumableData); // 알림 조건 체크
         } else {
-          print('Failed to fetch data: ${jsonData['message']}');
+          print('No consumable data available or failed: ${jsonData['message']}');
         }
       } else {
         print('Failed to fetch data. Status code: ${response.statusCode}');
@@ -209,6 +205,39 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
 
 
 
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = Provider.of<UserProvider>(context, listen: false); // listen: false로 값을 가져옴
+
+    userId = user.userId ?? "";
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final carProvider = Provider.of<CarProvider>(context, listen: false);
+      setState(() {
+        carId = carProvider.carId; // CarProvider에서 carId 가져오기
+      });
+
+      if (carId.isNotEmpty) {
+        // 페이지에 들어왔을 때 한 번만 데이터 가져오고 조건 체크
+        fetchConsumableData().then((consumableData) {
+
+        });
+      } else {
+        print("carId is not available");
+      }
+    });
+  }
+
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+
+
   // 날짜 배열을 읽기 쉬운 형식으로 변환하는 헬퍼 함수
   String formatDate(List<dynamic> dateArray) {
     if (dateArray != null && dateArray.length == 3) {
@@ -217,34 +246,29 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
     return "날짜 정보 없음";
   }
 
-  @override
-  void initState() {
-    super.initState();
-
-    // 데이터를 가져오는 메서드 호출 (사용자가 화면을 보고 있을 때 가져옴)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final carProvider = Provider.of<CarProvider>(context, listen: false);
-      setState(() {
-        carId = carProvider.carId; // CarProvider에서 carId 가져오기
-      });
-
-      if (carId.isNotEmpty) {
-        fetchConsumableData();
-      } else {
-        print("carId is not available");
-      }
-    });
-  }
 
 
-
-
-  void checkReplacementCycles() {
-    for (var box in boxData) {
-      if (box['widthFactor'] >= 1.0) {
-        addNotification(userData['userId'], box['title']);
-      }
-    }
+  String _getPartNameFromKey(String key) {
+    const partNames = {
+      'engineOil': '엔진 오일',
+      'transmissionOil': '미션 오일',
+      'brake': '브레이크',
+      'clutch': '클러치',
+      'steering': '파워스티어링',
+      'coolant': '냉각수',
+      'fuelFilter': '연료 필터',
+      'heaterFilter': '히터 필터',
+      'airconFilter': '에어컨 필터',
+      'brakeLining': '브레이크 라이닝',
+      'brakePadFront': '브레이크 패드(앞)',
+      'brakePadBack': '브레이크 패드(뒤)',
+      'wheelAlignment': '휠 얼라이먼트',
+      'ignitionPlug': '점화 플러그',
+      'battery': '배터리',
+      'outerBelt': '걸 벨트',
+      'timing': '타이밍 벨트',
+    };
+    return partNames[key] ?? '알 수 없는 부품';
   }
 
 
@@ -255,7 +279,6 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
     return size * (aspectRatio / baseAspectRatio) *
         MediaQuery.of(context).textScaleFactor;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -298,7 +321,31 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
           drawer: _buildDrawer(context),
 
           body: carId.isEmpty || boxData.isEmpty
-              ? Center(child: CircularProgressIndicator()) // 데이터 로딩 상태 표시
+              ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '차량 부품 교체 정보를 등록해주세요.',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'body',
+                  ),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => RegisterReplacePage()),
+                    );
+                  },
+                  child: Text('부품 정보 등록하러 가기'),
+                ),
+              ],
+            ),
+          )
               : SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -325,32 +372,22 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
   }
 
 
-
   Widget buildGreenBox({
     required String title,
     required String remainingDistance,
     required String lastReplacement,
     required double widthFactor,
   }) {
-    // 만약 remainingDistance, lastReplacement 등이 null로 들어온다면 기본값으로 설정해 줍니다.
     title = title ?? "Unknown Part";
     remainingDistance = remainingDistance ?? "0km";
     lastReplacement = lastReplacement ?? "Unknown Date";
-    widthFactor = widthFactor ?? 0.0;
-
-    if (widthFactor >= 1.0) {
-      // 알림 추가 로직 호출
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        addNotification(userData['userId'], title);
-      });
-    }
 
     return Container(
       width: 350,
       padding: EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Color(0xFF8CD8B4), // 연두색
-        borderRadius: BorderRadius.circular(20.0), // 둥근 모서리
+        color: Color(0xFF8CD8B4),
+        borderRadius: BorderRadius.circular(20.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,7 +420,7 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
                   Row(
                     children: [
                       Text(
-                        '잔여 주행거리: ',
+                        '주행거리: ',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -446,9 +483,7 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
               widthFactor: widthFactor,
               child: Container(
                 decoration: BoxDecoration(
-                  color: widthFactor >= 0.8
-                      ? Color(0xFFFF7E7E)
-                      : Color(0xFF60BF92),
+                  color: widthFactor >= 0.8 ? Color(0xFFFF7E7E) : Color(0xFF60BF92),
                   borderRadius: BorderRadius.circular(5.0),
                 ),
               ),
@@ -471,6 +506,7 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
       ),
     );
   }
+
 
 
 

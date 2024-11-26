@@ -1,31 +1,30 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:slomon/record_page.dart';
 import 'package:slomon/replacementCycle.dart';
 import 'package:http/http.dart' as http;
-
 
 import 'dashboard_page.dart';
 import 'myPage.dart';
 import 'notification_page.dart';
 import 'obd_guide_page.dart';
+import 'car_provider.dart';
+import 'user_provider.dart';
+import 'http_service.dart';
 
 class RegisterReplacePage extends StatefulWidget {
   @override
   _ReplacementCyclePageState createState() => _ReplacementCyclePageState();
 }
 
-
 class _ReplacementCyclePageState extends State<RegisterReplacePage> {
+  String mileageInput = ""; // 주행 거리 입력값 저장 변수
+
   String receivedData = "";
-
-  @override
-  final Map<String, dynamic> userData = {
-    "userId": "kchh0925"// 서버에 보낼 사용자 데이터
-  };
+  String userId = "";
   String name = ""; // 이름 변수
-
 
   final List<String> parts = [
     "엔진 오일",
@@ -54,45 +53,49 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
     "모르겠음 (선태하실 경우, 0에서부터 시작됩니다.)"
   ];
 
-  Future<void> fetchUserInfo() async {
-    try {
-      final url = Uri.parse('http://192.168.45.134:8080/api/user/view');
-
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({"userId": "kchh0925"}),
-      );
-
-      if (response.statusCode == 200) {
-        // UTF-8 디코딩
-        var jsonData = json.decode(utf8.decode(response.bodyBytes));
-
-        if (jsonData['success'] == "true" && jsonData['data'] != null) {
-          setState(() {
-            name = jsonData['data']['name'];
-          });
-        } else {
-          print('Unexpected response format: ${jsonData.toString()}');
-        }
-      } else {
-        print('Failed to load user info. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error fetching user info: $e');
-    }
-  }
-
   Map<String, String?> selectedValues = {};
 
   @override
   void initState() {
-    fetchUserInfo();
     super.initState();
+    final user = Provider.of<UserProvider>(context, listen: false);
+
+    setState(() {
+      userId = user.userId ?? "";
+      name = user.name?.isNotEmpty == true
+          ? utf8.decode(user.name!.runes.toList())
+          : '';
+    });
+
     for (var part in parts) {
       selectedValues[part] = null;
     }
+
+
   }
+
+  final Map<String, String> consumableTypeMapping = {
+    "엔진 오일": "engineOil",
+    "미션 오일": "transmissionOil",
+    "브레이크": "brake",
+    "클러치": "clutch",
+    "파워스티어링": "steering",
+    "냉각수": "coolant",
+    "연료 필터": "fuelFilter",
+    "히터 필터": "heaterFilter",
+    "에어컨 필터": "conditionerFilter",
+    "브레이크 라이닝": "brakeLining",
+    "브레이크 패드": "brakePadFront", // 예시로 앞쪽 패드
+    "휠 얼라이먼트": "wheelAlignment",
+    "점화 플러그": "ignitionPlug",
+    "배터리": "battery",
+    "걸 벨트": "outerBelt",
+    "타이밍 벨트": "timingBelt",
+  };
+
+
+
+
   double _getAdaptiveFontSize(BuildContext context, double size) {
     final screenSize = MediaQuery.of(context).size;
     final aspectRatio = screenSize.width / screenSize.height;
@@ -193,6 +196,7 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
           }),
         ],
       ),
+
     );
   }
 
@@ -208,82 +212,154 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
     );
   }
 
+
+
+  Future<void> saveConsumableData(String mileageInput) async {
+    try {
+      final carProvider = Provider.of<CarProvider>(context, listen: false);
+      final url = Uri.parse('http://172.30.78.141:8080/api/consumable/add');
+
+      for (var part in selectedValues.keys) {
+        if (selectedValues[part] != null) {
+          // 드롭다운 값을 숫자로 변환
+          int lastChangedValue = _convertLastChanged(selectedValues[part]!);
+
+          // consumableType 매핑
+          final mappedConsumableType = consumableTypeMapping[part];
+          if (mappedConsumableType == null) {
+            print("Invalid consumable type: $part");
+            continue; // 잘못된 consumableType이면 스킵
+          }
+
+          final consumableData = {
+            "carId": carProvider.carId, // 불러온 carId 값
+            "consumableType": mappedConsumableType, // 매핑된 부품 이름
+            "mileage": double.tryParse(mileageInput) ?? 0.0, // 입력받은 총 주행 거리
+            "lastChanged": lastChangedValue, // 변환된 드롭다운 값
+          };
+
+          // 서버로 데이터 전송
+          final response = await http.post(
+            url,
+            headers: {"Content-Type": "application/json"},
+            body: json.encode(consumableData),
+          );
+
+          if (response.statusCode == 201) {
+            print('${part} data saved successfully.');
+          } else {
+            print('Failed to save ${part} data. Status code: ${response.statusCode}');
+          }
+        }
+      }
+    } catch (e) {
+      print('Error saving consumable data: $e');
+    }
+  }
+
+
+
+
+
+
+
+  // 드롭다운 값 변환 함수
+  int _convertLastChanged(String dropdownValue) {
+    switch (dropdownValue) {
+      case "6개월 이내":
+        return 6;
+      case "1년 이내":
+        return 12;
+      case "1년 6개월 이내":
+        return 18;
+      case "2년 이후":
+        return 24;
+      default: // "모르겠음"
+        return 0;
+    }
+  }
+
+  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: Colors.grey),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
-        ),
-        title: Text(
-          '알림',
-          style: TextStyle(
-            fontSize: _getAdaptiveFontSize(context, 28),
-            fontFamily: 'head',
-            color: Color(0xFF818585),
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          Icon(Icons.notifications, color: Colors.grey),
-        ],
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(2),
-          child: Container(
-            height: 7,
-            color: Color(0xFF8CD8B4),
-          ),
-        ),
+        title: Text('부품 교체 등록'),
+        backgroundColor: Colors.green,
       ),
-      drawer: _buildDrawer(context), // 기존 Drawer 유지
       body: SingleChildScrollView(
-        child: Container(
-          color: Colors.grey[200],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                height: 7.0,
-                color: Color(0xFF8CD8B4),
+              // 주행 거리 입력 Row
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.grey[300], // 배경색 회색
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide.none, // 테두리 제거
+                          borderRadius: BorderRadius.circular(10), // 모서리 둥글게
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        hintText: "총 주행 거리를 입력해주세요",
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (value) {
+                        setState(() {
+                          mileageInput = value; // 입력값 저장
+                        });
+                      },
+                    ),
+                  ),
+                  SizedBox(width: 8), // 간격 추가
+                  Text(
+                    "km",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[700], // 색상 회색
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: 16),
 
-              ...parts.map((part) => Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      part,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+              // 부품 교체 주기 선택 드롭다운
+              ...selectedValues.keys.map((part) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        part,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 8),
-                    Theme(
-                      data: Theme.of(context).copyWith(
-                        canvasColor: Colors.grey[300], // 드롭다운 메뉴 배경색
-                      ),
-                      child: DropdownButtonFormField<String>(
+                      SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
                         value: selectedValues[part],
-                        items: options
-                            .map((option) => DropdownMenuItem<String>(
-                          value: option,
-                          child: Text(option),
-                        ))
-                            .toList(),
+                        items: [
+                          "6개월 이내",
+                          "1년 이내",
+                          "1년 6개월 이내",
+                          "2년 이후",
+                          "모르겠음"
+                        ].map((option) {
+                          return DropdownMenuItem(
+                            value: option,
+                            child: Text(option),
+                          );
+                        }).toList(),
                         onChanged: (value) {
                           setState(() {
                             selectedValues[part] = value;
@@ -291,69 +367,51 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
                         },
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: Colors.grey[300], // 배경색 회색
+                          fillColor: Colors.grey[300],
                           border: OutlineInputBorder(
-                            borderSide: BorderSide.none, // 테두리 제거
-                            borderRadius: BorderRadius.circular(10), // 모서리 둥글게
+                            borderSide: BorderSide.none,
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           contentPadding: EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 8,
                           ),
                         ),
-                        hint: Text("선택해주세요"),
-                        style: TextStyle(color: Colors.black87), // 텍스트 색상
                       ),
-                    ),
-                  ],
-                ),
-              )).toList(),
-
-              // "앞으로의 부품 교체 주기를 예측하기 위한 기록입니다." 문구 중앙 배치
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    "*첫번째 교체주기 정보는 약간의 오차가 있을 수 있습니다.*",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.normal,
-                      color: Color(0xFFEA7B7B), // 문구 색상 지정
-                    ),
+                    ],
                   ),
-                ),
-              ),
+                );
+              }).toList(),
+
+              SizedBox(height: 16),
 
               // 완료 버튼
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0), // 목록과 버튼 간격
-                child: Align(
-                  alignment: Alignment.center,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // 완료 버튼 눌렀을 때 동작
-                      print("완료 버튼 눌림");
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF8CD8B4), // 버튼 배경색
-                      padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15), // 버튼 크기
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20), // 둥근 버튼
-                      ),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    await saveConsumableData(mileageInput); // 입력받은 주행 거리 값 전달
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => ReplacementCyclePage()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF8CD8B4), // 버튼 배경색
+                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15), // 버튼 크기
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20), // 둥근 버튼
                     ),
-                    child: Text(
-                      "완료",
-                      style: TextStyle(
-                        color: Colors.white, // 텍스트 색상
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  ),
+                  child: Text(
+                    "완료",
+                    style: TextStyle(
+                      color: Colors.white, // 텍스트 색상
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 16),
             ],
           ),
         ),
