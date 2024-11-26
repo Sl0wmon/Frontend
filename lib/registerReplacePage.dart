@@ -1,11 +1,9 @@
 import 'dart:convert';
-
+import 'drawer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:slomon/record_page.dart';
 import 'package:slomon/replacementCycle.dart';
 import 'package:http/http.dart' as http;
-
-
 import 'dashboard_page.dart';
 import 'myPage.dart';
 import 'notification_page.dart';
@@ -16,7 +14,6 @@ class RegisterReplacePage extends StatefulWidget {
   _ReplacementCyclePageState createState() => _ReplacementCyclePageState();
 }
 
-
 class _ReplacementCyclePageState extends State<RegisterReplacePage> {
   String receivedData = "";
 
@@ -24,6 +21,7 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
   final Map<String, dynamic> userData = {
     "userId": "kchh0925"// 서버에 보낼 사용자 데이터
   };
+
   String name = ""; // 이름 변수
 
 
@@ -68,7 +66,7 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
         // UTF-8 디코딩
         var jsonData = json.decode(utf8.decode(response.bodyBytes));
 
-        if (jsonData['success'] == "true" && jsonData['data'] != null) {
+        if (jsonData['succeㅅss'] == "true" && jsonData['data'] != null) {
           setState(() {
             name = jsonData['data']['name'];
           });
@@ -232,7 +230,13 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          Icon(Icons.notifications, color: Colors.grey),
+          IconButton(
+            icon: Icon(Icons.notifications, color: Colors.grey),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage()));
+            },
+          ),
         ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(2),
@@ -242,7 +246,10 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
           ),
         ),
       ),
-      drawer: _buildDrawer(context), // 기존 Drawer 유지
+      drawer: DrawerWidget(
+        name: name,
+        getAdaptiveFontSize: _getAdaptiveFontSize,
+      ),
       body: SingleChildScrollView(
         child: Container(
           color: Colors.grey[200],

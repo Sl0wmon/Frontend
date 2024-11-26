@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'user_provider.dart';
 import 'sua_detail_page.dart';
 import 'drawer_widget.dart';
+import 'notification_page.dart';
 
 class RecordPage extends StatefulWidget {
   const RecordPage({super.key});
@@ -69,14 +70,20 @@ class _RecordPageState extends State<RecordPage> {
           style: TextStyle(
               fontSize: _getAdaptiveFontSize(context, 28),
               fontFamily: 'head',
-              color: Color(0xFF818585)
-          ),
+              color: Color(0xFF818585)),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          Icon(Icons.notifications, color: Colors.grey),
+          IconButton(
+            icon: Icon(Icons.notifications, color: Colors.grey),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => NotificationPage()));
+            },
+          ),
         ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(2),
@@ -97,6 +104,7 @@ class _RecordPageState extends State<RecordPage> {
           final suaid = record['suaid'];
           final startTime = record['suaonTime'] ?? [0, 0, 0, 0, 0, 0];
           final endTime = record['suaoffTime'] ?? [0, 0, 0, 0, 0, 0];
+          final mileage = record['mileage'] ?? 0.0; // 주행 거리
 
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
@@ -111,10 +119,27 @@ class _RecordPageState extends State<RecordPage> {
                 child: ListTile(
                   title: Text(
                     '${startTime[0]}.${startTime[1].toString().padLeft(2, '0')}.${startTime[2].toString().padLeft(2, '0')}',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'head',
+                    ),
                   ),
-                  subtitle: Text(
-                    '${formatTime(startTime)} ~ ${formatTime(endTime)}',
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '주행 거리: ${mileage.toStringAsFixed(1)} km', // 주행 거리 표시
+                        style: TextStyle(
+                          fontFamily: 'body',
+                        ),
+                      ),
+                      Text(
+                        '${formatTime(startTime)} ~ ${formatTime(endTime)}', // 시간 표시
+                        style: TextStyle(
+                          fontFamily: 'body',
+                        ),
+                      ),
+                    ],
                   ),
                   trailing: const Text(
                     '>',

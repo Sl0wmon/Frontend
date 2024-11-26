@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:slomon/http_service.dart';
 import 'dart:convert';
+import 'notification_page.dart';
 
 class SUADetailPage extends StatefulWidget {
   final String suaid;
@@ -16,6 +17,7 @@ class _SUADetailPageState extends State<SUADetailPage> {
   List<double> speedData = [];
   List<double> accPressureData = [];
   List<double> brakePressureData = [];
+  double totalDistance = 0.0;
 
   @override
   void initState() {
@@ -40,6 +42,9 @@ class _SUADetailPageState extends State<SUADetailPage> {
           speedData = suaDetails.map((entry) => entry['speed'] as double).toList();
           accPressureData = suaDetails.map((entry) => entry['accPressure'] as double).toList();
           brakePressureData = suaDetails.map((entry) => entry['brakePressure'] as double).toList();
+
+          // Calculate total distance
+          totalDistance = calculateTotalDistance();
         });
       }
     } else {
@@ -47,23 +52,56 @@ class _SUADetailPageState extends State<SUADetailPage> {
     }
   }
 
+  double calculateTotalDistance() {
+    double distance = 0.0;
+    for (int i = 1; i < suaDetails.length; i++) {
+      final speed1 = suaDetails[i - 1]['speed'] as double; // km/h
+      final speed2 = suaDetails[i]['speed'] as double; // km/h
+      final timestamp1 = suaDetails[i - 1]['timestamp'] as List<dynamic>;
+      final timestamp2 = suaDetails[i]['timestamp'] as List<dynamic>;
+
+      // Convert timestamps to DateTime
+      final time1 = DateTime(
+        timestamp1[0], timestamp1[1], timestamp1[2], timestamp1[3], timestamp1[4], timestamp1[5],
+      );
+      final time2 = DateTime(
+        timestamp2[0], timestamp2[1], timestamp2[2], timestamp2[3], timestamp2[4], timestamp2[5],
+      );
+
+      final timeDiff = time2.difference(time1).inSeconds / 3600.0; // 시간 단위로 변환
+      final averageSpeed = (speed1 + speed2) / 2.0; // 평균 속도
+
+      distance += averageSpeed * timeDiff; // 이동 거리 (km)
+    }
+    return distance;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (suaDetails.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          title: Text('급발진 상세 기록', style: TextStyle(color: Colors.black)),
+          title: Text(
+            '급발진 상세 기록',
+            style: TextStyle(
+                fontSize: _getAdaptiveFontSize(context, 28),
+                fontFamily: 'head',
+                color: Color(0xFF818585)
+            ),
+          ),
+          centerTitle: true,
           backgroundColor: Colors.white,
           elevation: 0,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.black),
+            icon: Icon(Icons.arrow_back, color: Colors.grey),
             onPressed: () => Navigator.pop(context),
           ),
           actions: [
             IconButton(
-              icon: Icon(Icons.notifications, color: Colors.black),
+              icon: Icon(Icons.notifications, color: Colors.grey),
               onPressed: () {
-                // 알림 클릭 이벤트 처리
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage()));
               },
             ),
           ],
@@ -76,44 +114,76 @@ class _SUADetailPageState extends State<SUADetailPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('급발진 상세 기록', style: TextStyle(color: Colors.black)),
+        title: Text(
+          '급발진 상세 기록',
+          style: TextStyle(
+              fontSize: _getAdaptiveFontSize(context, 28),
+              fontFamily: 'head',
+              color: Color(0xFF818585)
+          ),
+        ),
+        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: Colors.grey),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications, color: Colors.black),
+            icon: Icon(Icons.notifications, color: Colors.grey),
             onPressed: () {
-              // 알림 클릭 이벤트 처리
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage()));
             },
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(2),
+          child: Container(
+            height: 7,
+            color: Color(0xFF8CD8B4),
+          ),
+        ),
       ),
-      body: Padding(
+      body: SingleChildScrollView(  // 세로로 스크롤 가능하도록 설정
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-            const Text('속도', style: TextStyle(fontSize: 18)),
-            const SizedBox(height: 20),
-            // 하얀 사각형 배경 추가, 여유 공간을 만들기 위해 padding 설정
+            const SizedBox(height: 5),  // 상단 공백을 줄임
+            Text(
+              'SUA ID: ${widget.suaid}',  // SUAId를 상단에 표시
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                color: Colors.grey,
+                fontFamily: 'head'
+              ),
+            ),
+            const SizedBox(height: 15),  // SUAId와 아래 항목 사이 공백 줄임
+            const Text(
+                '속도',
+                style: TextStyle(
+                    fontSize: 24,
+                  fontFamily: 'head',
+                  color: Colors.black
+                )
+            ),
+            const SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white, // 배경 색
-                borderRadius: BorderRadius.circular(10), // 모서리 둥글게
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.5), // 그림자 색
+                    color: Colors.grey.withOpacity(0.5),
                     blurRadius: 5,
-                    offset: const Offset(0, 3), // 그림자 위치
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
-              padding: const EdgeInsets.all(16.0), // 여유 공간 추가
+              padding: const EdgeInsets.all(16.0),
               child: SizedBox(
                 height: 200,
                 child: CustomPaint(
@@ -124,26 +194,44 @@ class _SUADetailPageState extends State<SUADetailPage> {
             ),
             const SizedBox(height: 10),
             Text(
+              '총 주행 거리: ${totalDistance.toStringAsFixed(2)} km',
+              style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                fontFamily: 'body'
+              ),
+            ),
+            Text(
               '평균 속도: ${averageSpeed.toStringAsFixed(2)} km/h',
-              style: const TextStyle(fontSize: 16, color: Colors.black),
+              style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                fontFamily: 'body'
+              ),
             ),
             const SizedBox(height: 20),
-            const Text('페달 기록', style: TextStyle(fontSize: 18)),
-            const SizedBox(height: 20),
-            // 하얀 사각형 배경 추가, 여유 공간을 만들기 위해 padding 설정
+            const Text(
+                '페달 기록',
+                style: TextStyle(
+                    fontSize: 24,
+                  fontFamily: 'head',
+                  color: Colors.black
+                )
+            ),
+            const SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white, // 배경 색
-                borderRadius: BorderRadius.circular(10), // 모서리 둥글게
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.5), // 그림자 색
+                    color: Colors.grey.withOpacity(0.5),
                     blurRadius: 5,
-                    offset: const Offset(0, 3), // 그림자 위치
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
-              padding: const EdgeInsets.all(16.0), // 여유 공간 추가
+              padding: const EdgeInsets.all(16.0),
               child: SizedBox(
                 height: 200,
                 child: CustomPaint(
@@ -155,16 +243,28 @@ class _SUADetailPageState extends State<SUADetailPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            // 범례 텍스트 추가
+            const SizedBox(height: 10),
             Text(
-              '가속 페달 (빨간색) / 브레이크 페달 (초록색)',
-              style: const TextStyle(fontSize: 16, color: Colors.black),
+              '가속 페달 (빨간색) | 브레이크 페달 (초록색)',
+              style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                fontFamily: 'body'
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  double _getAdaptiveFontSize(BuildContext context, double size) {
+    final screenSize = MediaQuery.of(context).size;
+    final aspectRatio = screenSize.width / screenSize.height;
+    const baseAspectRatio = 375.0 / 667.0;
+    return size *
+        (aspectRatio / baseAspectRatio) *
+        MediaQuery.of(context).textScaleFactor;
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:slomon/notification_page.dart';
 
 class GuideDetailPage extends StatelessWidget {
   final Map<String, dynamic> guideData;
@@ -11,21 +12,37 @@ class GuideDetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('OBD 진단 상세 가이드', style: TextStyle(color: Colors.black)),
+        title: Text(
+            'OBD 진단 상세 가이드',
+            style: TextStyle(
+                fontSize: _getAdaptiveFontSize(context, 28),
+                fontFamily: 'head',
+                color: Color(0xFF818585)
+            )
+        ),
+        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: Colors.grey),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications, color: Colors.black),
+            icon: Icon(Icons.notifications, color: Colors.grey),
             onPressed: () {
-              // 알림 클릭 이벤트 처리
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage()));
             },
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(2),
+          child: Container(
+            height: 7,
+            color: Color(0xFF8CD8B4),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -119,5 +136,14 @@ class GuideDetailPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  double _getAdaptiveFontSize(BuildContext context, double size) {
+    final screenSize = MediaQuery.of(context).size;
+    final aspectRatio = screenSize.width / screenSize.height;
+    const baseAspectRatio = 375.0 / 667.0;
+    return size *
+        (aspectRatio / baseAspectRatio) *
+        MediaQuery.of(context).textScaleFactor;
   }
 }

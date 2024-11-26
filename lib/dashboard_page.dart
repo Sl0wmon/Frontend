@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'drawer_widget.dart';
 import 'GaugePainter.dart';
+import 'notification_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -131,6 +132,24 @@ class _DashboardPageState extends State<DashboardPage> {
                   Scaffold.of(context).openDrawer();
                 },
               ),
+        ),centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.notifications, color: Colors.grey),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage()));
+            },
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(2),
+          child: Container(
+            height: 7,
+            color: Color(0xFF8CD8B4),
+          ),
         ),
       ),
       drawer: DrawerWidget(
