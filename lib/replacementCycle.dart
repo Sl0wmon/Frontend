@@ -1,19 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 import 'package:slomon/registerReplacePage.dart';
 import 'package:slomon/user_provider.dart';
-
 import 'drawer_widget.dart';
 import 'car_provider.dart';
 import 'http_service.dart';
-import 'myPage.dart';
 import 'notification_page.dart';
-import 'obd_guide_page.dart';
-
 
 class ReplacementCyclePage extends StatefulWidget {
   @override
@@ -48,19 +42,13 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
     {'title': '걸 벨트', 'remainingDistance': '180.10km', 'lastReplacement': '2024-12-15', 'widthFactor': 0.5},
     {'title': '타이밍', 'remainingDistance': '150.60km', 'lastReplacement': '2024-12-20', 'widthFactor': 0.9},
   ];
-  final Map<String, dynamic> userData = {
-    "carId": "KGM31231732467313341" // 서버에 보낼 차량 데이터
-  };
-
 
   Future<void> addNotification(String? userId, String? title) async {
     if (userId == null || title == null) {
       print("알림 추가 실패: userId 또는 title이 null입니다.");
       return;
     }
-
     try {
-      final url = Uri.parse('http://172.30.78.141:8080/api/notification/add');
       final notificationData = {
         "userId": userId,
         "notificationTime": DateTime.now().toIso8601String().split('.').first, // 초 단위까지만 포함
@@ -71,13 +59,7 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
 
       print("Notification Data Request: ${json.encode(notificationData)}");
 
-      final response = await http.post(
-        url,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: json.encode(notificationData),
-      );
+      final response = await HttpService().postRequest("notification/add", notificationData);
 
       if (response.statusCode == 201) {
         print('Notification added successfully.');
@@ -89,10 +71,6 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
       print('Error adding notification: $e');
     }
   }
-
-
-
-
 
   void checkReplacementCycles(Map<String, dynamic> consumableData) {
     const maxDistances = {
@@ -131,7 +109,6 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
       print("해당 조건을 만족하는 부품이 없습니다.");
     }
   }
-
 
   Future<void> fetchConsumableData() async {
     try {
@@ -202,16 +179,13 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
     }
   }
 
-
-
-
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     final user = Provider.of<UserProvider>(context, listen: false); // listen: false로 값을 가져옴
-
+    name = user.name != null ? utf8.decode(user.name!.codeUnits) : ""; // UTF-8 디코딩 적용
     userId = user.userId ?? "";
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final carProvider = Provider.of<CarProvider>(context, listen: false);
@@ -309,7 +283,13 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
             backgroundColor: Colors.white,
             elevation: 0,
             actions: [
-              Icon(Icons.notifications, color: Colors.grey),
+              IconButton(
+                icon: Icon(Icons.notifications, color: Colors.grey),
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage()));
+                },
+              ),
             ],
             bottom: PreferredSize(
               preferredSize: Size.fromHeight(2),
@@ -344,7 +324,16 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
                       MaterialPageRoute(builder: (context) => RegisterReplacePage()),
                     );
                   },
-                  child: Text('부품 정보 등록하러 가기'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF8CD8B4), // 배경색
+                    foregroundColor: Colors.white,     // 글자색
+                  ),
+                  child: Text(
+                    '부품 정보 등록하러 가기',
+                    style: TextStyle(
+                      fontFamily: 'body'
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -508,115 +497,6 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
           ),
         ],
       ),
-    );
-  }
-
-
-
-
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Color(0xFF8CD8B4),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '사이드 메뉴',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: _getAdaptiveFontSize(context, 24),
-                    fontFamily: 'head',
-                  ),
-                ),
-                SizedBox(height: 40), // 사이드 메뉴와 이름 간격 조정
-                Row(
-                  children: [
-                    // 프로필 이미지 위치
-                    Container(
-                      width: 35,
-                      height: 35,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: AssetImage('assets/images/profile.png'), // 이미지 경로 지정
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10), // 이미지와 텍스트 간격 조정
-                    Expanded(
-                      child: Text(
-                        '$name님', // 이름 텍스트 표시
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: _getAdaptiveFontSize(context, 18),
-                            fontFamily: 'body',
-                            fontWeight: FontWeight.bold
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                            context, MaterialPageRoute(builder: (context) => MyPage())
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          _buildDrawerItem(context, "대시보드", Icons.dashboard, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => DashboardPage())
-            );
-          }),
-          _buildDrawerItem(context, "급발진 상황 기록", Icons.history, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => RecordPage()));
-          }),
-          _buildDrawerItem(context, "차량 부품 교체 주기", Icons.car_repair, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => ReplacementCyclePage()));
-          }),
-          _buildDrawerItem(context, "OBD 진단 가이드", Icons.info, () {
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => ObdGuidePage()));
-          }),
-          _buildDrawerItem(context, "알림", Icons.notifications, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => NotificationPage()));
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem(
-      BuildContext context, String title, IconData icon, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: Color(0xFF8CD8B4)),
-      title: Text(
-        title,
-        style: TextStyle(fontFamily: 'body'),
-      ),
-      onTap: onTap,
     );
   }
 }

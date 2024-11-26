@@ -2,17 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:slomon/record_page.dart';
 import 'package:slomon/replacementCycle.dart';
 import 'package:http/http.dart' as http;
-
-import 'dashboard_page.dart';
-import 'myPage.dart';
-import 'notification_page.dart';
-import 'obd_guide_page.dart';
 import 'car_provider.dart';
 import 'user_provider.dart';
-import 'http_service.dart';
 
 class RegisterReplacePage extends StatefulWidget {
   @override
@@ -104,119 +97,10 @@ class _ReplacementCyclePageState extends State<RegisterReplacePage> {
         MediaQuery.of(context).textScaleFactor;
   }
 
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Color(0xFF8CD8B4),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '사이드 메뉴',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: _getAdaptiveFontSize(context, 24),
-                    fontFamily: 'head',
-                  ),
-                ),
-                SizedBox(height: 40), // 사이드 메뉴와 이름 간격 조정
-                Row(
-                  children: [
-                    // 프로필 이미지 위치
-                    Container(
-                      width: 35,
-                      height: 35,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: AssetImage('assets/images/profile.png'), // 이미지 경로 지정
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10), // 이미지와 텍스트 간격 조정
-                    Expanded(
-                      child: Text(
-                        '$name님', // 이름 텍스트 표시
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: _getAdaptiveFontSize(context, 18),
-                            fontFamily: 'body',
-                            fontWeight: FontWeight.bold
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                            context, MaterialPageRoute(builder: (context) => MyPage())
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          _buildDrawerItem(context, "대시보드", Icons.dashboard, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => DashboardPage())
-            );
-          }),
-          _buildDrawerItem(context, "급발진 상황 기록", Icons.history, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => RecordPage()));
-          }),
-          _buildDrawerItem(context, "차량 부품 교체 주기", Icons.car_repair, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => ReplacementCyclePage()));
-          }),
-          _buildDrawerItem(context, "OBD 진단 가이드", Icons.info, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => ObdGuidePage()));
-          }),
-          _buildDrawerItem(context, "알림", Icons.notifications, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => NotificationPage()));
-          }),
-        ],
-      ),
-
-    );
-  }
-
-  Widget _buildDrawerItem(
-      BuildContext context, String title, IconData icon, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: Color(0xFF8CD8B4)),
-      title: Text(
-        title,
-        style: TextStyle(fontFamily: 'body'),
-      ),
-      onTap: onTap,
-    );
-  }
-
-
-
   Future<void> saveConsumableData(String mileageInput) async {
     try {
       final carProvider = Provider.of<CarProvider>(context, listen: false);
+
       final url = Uri.parse('http://172.30.78.141:8080/api/consumable/add');
 
       for (var part in selectedValues.keys) {

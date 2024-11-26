@@ -30,7 +30,7 @@ class DrawerWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '사이드 메뉴',
+                  'SLOMON',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: getAdaptiveFontSize(context, 34),

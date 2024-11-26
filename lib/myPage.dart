@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'http_service.dart';
 import 'modify_car_info_page.dart';
 import 'update_user_page.dart';
+import 'notification_page.dart';
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -110,8 +111,14 @@ class _MyPageState extends State<MyPage> {
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
-        actions: const [
-          Icon(Icons.notifications, color: Colors.grey),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.notifications, color: Colors.grey),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage()));
+            },
+          ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(2),
