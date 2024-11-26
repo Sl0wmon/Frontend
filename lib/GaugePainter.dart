@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 
 class GaugePainter extends CustomPainter {
   final double value;
+  final double maxValue;
 
-  GaugePainter(this.value);
+  GaugePainter(this.value, this.maxValue);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -15,9 +16,9 @@ class GaugePainter extends CustomPainter {
       ..strokeWidth = 9;
 
     final pointerPaint = Paint()
-      ..color = Color(0xFFF86767)
+      ..color = const Color(0xFFF86767)
       ..style = PaintingStyle.fill
-      ..strokeWidth = 6; // 바늘의 두께를 더 두껍게 설정
+      ..strokeWidth = 6;
 
     final radius = size.width / 2;
     final center = Offset(size.width / 2, size.height);
@@ -31,8 +32,8 @@ class GaugePainter extends CustomPainter {
       paint,
     );
 
-    // Calculate the pointer angle for value in range [0, 180]
-    final normalizedValue = (value / 180).clamp(0.0, 1.0); // Normalize to [0, 1]
+    // Calculate the pointer angle for value in range [0, maxValue]
+    final normalizedValue = (value / maxValue).clamp(0.0, 1.0); // Normalize to [0, 1]
     final angle = 3.14 + (3.14 * normalizedValue); // Scale to 180 degrees
 
     final pointerLength = radius - 10;
@@ -48,6 +49,6 @@ class GaugePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true; // Always repaint on value change
+    return true;
   }
 }
