@@ -3,17 +3,17 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:slomon/dashboard_page.dart';
-import 'package:slomon/record_page.dart';
 import 'package:http/http.dart' as http;
 import 'package:slomon/registerReplacePage.dart';
 import 'package:slomon/user_provider.dart';
 
+import 'drawer_widget.dart';
 import 'car_provider.dart';
 import 'http_service.dart';
 import 'myPage.dart';
 import 'notification_page.dart';
 import 'obd_guide_page.dart';
+
 
 class ReplacementCyclePage extends StatefulWidget {
   @override
@@ -280,6 +280,7 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
         MediaQuery.of(context).textScaleFactor;
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Consumer<CarProvider>(
@@ -318,8 +319,10 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
               ),
             ),
           ),
-          drawer: _buildDrawer(context),
-
+          drawer: DrawerWidget(
+            name: name,
+            getAdaptiveFontSize: _getAdaptiveFontSize,
+          ),
           body: carId.isEmpty || boxData.isEmpty
               ? Center(
             child: Column(
@@ -381,6 +384,7 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
     title = title ?? "Unknown Part";
     remainingDistance = remainingDistance ?? "0km";
     lastReplacement = lastReplacement ?? "Unknown Date";
+
 
     return Container(
       width: 350,

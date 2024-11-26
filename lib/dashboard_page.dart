@@ -24,9 +24,12 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
-    final user = Provider.of<UserProvider>(context, listen: false); // listen: false로 값을 가져옴
-    timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => fetchData());
-    name = user.name?.isNotEmpty == true ? utf8.decode(user.name!.runes.toList()) : '';
+    final user = Provider.of<UserProvider>(
+        context, listen: false); // listen: false로 값을 가져옴
+    timer =
+        Timer.periodic(const Duration(seconds: 1), (Timer t) => fetchData());
+    name =
+    user.name?.isNotEmpty == true ? utf8.decode(user.name!.runes.toList()) : '';
     userId = user.userId ?? "";
   }
 
@@ -39,7 +42,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> fetchData() async {
     try {
-      final response = await HttpService().postRequest("dashboard/view", {"userId": userId});
+      final response = await HttpService().postRequest(
+          "dashboard/view", {"userId": userId});
 
       if (response.statusCode == 200) {
         var jsonData = json.decode(response.body);
@@ -52,12 +56,14 @@ class _DashboardPageState extends State<DashboardPage> {
 
         // 유효한 데이터일 경우에만 상태 업데이트
         if (jsonData['success'] == "true" && jsonData['data'] != null) {
-          Provider.of<DataProvider>(context, listen: false).updateData(jsonData['data']);
+          Provider.of<DataProvider>(context, listen: false).updateData(
+              jsonData['data']);
         } else {
           print('Unexpected response format: ${jsonData.toString()}');
         }
       } else {
-        print('Failed to load dashboard data. Status code: ${response.statusCode}');
+        print('Failed to load dashboard data. Status code: ${response
+            .statusCode}');
       }
     } catch (e) {
       print('Error fetching dashboard data: $e');
@@ -65,14 +71,15 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
 
-
   Color _getCardColor(String title, [double value = 0]) {
     Color defaultColor = const Color(0xFF8CD8B4);
     Color alertColor = const Color(0xFFF39393);
 
     switch (title) {
+      case 'RPM':
+        return value > 6000 ? alertColor :defaultColor;
       case '속도':
-        return value > 80 ? alertColor : defaultColor;
+        return value > 130 ? alertColor : defaultColor;
       case '냉각수 온도':
         return value > 100 ? alertColor : defaultColor;
       case '흡기 온도':
@@ -87,16 +94,22 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   double _getAdaptiveFontSize(BuildContext context, double size) {
-    final screenSize = MediaQuery.of(context).size;
+    final screenSize = MediaQuery
+        .of(context)
+        .size;
     final aspectRatio = screenSize.width / screenSize.height;
     const baseAspectRatio = 375.0 / 667.0;
     return size * (aspectRatio / baseAspectRatio) *
-        MediaQuery.of(context).textScaleFactor;
+        MediaQuery
+            .of(context)
+            .textScaleFactor;
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery
+        .of(context)
+        .size;
     final double cardWidth = size.width * 0.4;
     final double cardHeight = size.height * 0.25; // 기존 0.15에서 0.25로 수정하여 높이를 늘림
 
@@ -111,12 +124,13 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ),
         leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.grey),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
+          builder: (context) =>
+              IconButton(
+                icon: const Icon(Icons.menu, color: Colors.grey),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+              ),
         ),
       ),
       drawer: DrawerWidget(
@@ -152,11 +166,12 @@ class _DashboardPageState extends State<DashboardPage> {
                         cardWidth,
                         cardHeight,
                         isLargeFont: true,
-                        valueData: double.tryParse(data["Speed"] ?? "0.0") ?? 0.0,
+                        valueData: double.tryParse(data["Speed"] ?? "0.0") ??
+                            0.0,
                       ),
                       _buildCardSingleLine(
                         'RPM',
-                        '${data["RPM"] ?? "0.0"} rpm',
+                        '${(double.tryParse(data["RPM"] ?? "0.0") ?? 0.0).toStringAsFixed(0)} rpm',
                         cardWidth,
                         cardHeight,
                         isLargeFont: true,
@@ -168,7 +183,8 @@ class _DashboardPageState extends State<DashboardPage> {
                         cardWidth,
                         cardHeight,
                         isLargeFont: true,
-                        valueData: double.tryParse(data["CoolantTemp"] ?? "0.0") ?? 0.0,
+                        valueData: double.tryParse(data["CoolantTemp"] ??
+                            "0.0") ?? 0.0,
                       ),
                       _buildCardSingleLine(
                         '흡기 온도',
@@ -176,11 +192,12 @@ class _DashboardPageState extends State<DashboardPage> {
                         cardWidth,
                         cardHeight,
                         isLargeFont: true,
-                        valueData: double.tryParse(data["IntakeTemp"] ?? "0.0") ?? 0.0,
+                        valueData: double.tryParse(data["IntakeTemp"] ??
+                            "0.0") ?? 0.0,
                       ),
                       _buildCardSingleLine(
                         '엔진 부하',
-                        '${data["EngineLoad"] ?? "0.0"} %',
+                        '${(double.tryParse(data["EngineLoad"] ?? "0.0") ?? 0.0).toStringAsFixed(4)} %',
                         cardWidth,
                         cardHeight,
                         isLargeFont: true,
@@ -192,7 +209,8 @@ class _DashboardPageState extends State<DashboardPage> {
                         cardWidth,
                         cardHeight,
                         isLargeFont: true,
-                        valueData: double.tryParse(data["IntakePressure"] ?? "0.0") ?? 0.0,
+                        valueData: double.tryParse(data["IntakePressure"] ??
+                            "0.0") ?? 0.0,
                       ),
                     ],
                   ),
@@ -212,16 +230,23 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildCardSingleLine(
-      String title, String value, double cardWidth, double cardHeight,
+  Widget _buildCardSingleLine(String title, String value, double cardWidth,
+      double cardHeight,
       {bool isLargeFont = false, double? valueData}) {
     double numericValue = 0.0;
+    double maxValue = 130.0; // 기본 최대값
 
     try {
       numericValue = double.parse(value.split(" ")[0]);
     } catch (e) {
       print("Error parsing value for $title: $e");
     }
+
+    // RPM에 대한 최대값을 10000으로 설정
+    if (title == 'RPM') maxValue = 10000.0;
+    if (title == '속도') maxValue = 255;  // 속도의 최대값 설정
+    if (title == '흡기 압력') maxValue = 255;  // 흡기 압력의 최대값 설정
+    if (title == '엔진 부하') maxValue = 100;  // 흡기 압력의 최대값 설정
 
     return SizedBox(
       width: cardWidth,
@@ -279,7 +304,8 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                       child: FractionallySizedBox(
                         alignment: Alignment.centerLeft,
-                        widthFactor: (numericValue / 130).clamp(0.0, 1.0),
+                        widthFactor: (numericValue / maxValue).clamp(0.0, 1.0),
+                        // 최대값 적용
                         child: Container(
                           decoration: BoxDecoration(
                             color: const Color(0xFFEA7B7B),
@@ -293,7 +319,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   else
                     CustomPaint(
                       size: Size(cardWidth * 0.8, cardHeight * 0.5),
-                      painter: GaugePainter(numericValue),
+                      painter: GaugePainter(numericValue, maxValue), // 최대값 전달
                     ),
                   const SizedBox(height: 2),
                   Text.rich(

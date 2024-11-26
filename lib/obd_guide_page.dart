@@ -152,34 +152,31 @@ class _ObdGuidePageState extends State<ObdGuidePage> {
       appBar: AppBar(
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.grey),
+            icon: Icon(Icons.menu, color: Colors.grey),
             onPressed: () {
               Scaffold.of(context).openDrawer();
             },
           ),
         ),
         title: Text(
-          "OBD 진단 가이드",
+          'OBD 진단 가이드',
           style: TextStyle(
-            fontSize: _getAdaptiveFontSize(context, 28),
-            fontFamily: 'head',
-            color: colorFromHex('#818585'),
+              fontSize: _getAdaptiveFontSize(context, 28),
+              fontFamily: 'head',
+              color: Color(0xFF818585)
           ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.grey),
-            onPressed: () {},
-          ),
+          Icon(Icons.notifications, color: Colors.grey),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(2),
+          preferredSize: Size.fromHeight(2),
           child: Container(
-            height: 2,
-            color: colorFromHex('#8CD8B4'),
+            height: 7,
+            color: Color(0xFF8CD8B4),
           ),
         ),
       ),

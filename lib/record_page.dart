@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'user_provider.dart';
 import 'sua_detail_page.dart';
+import 'drawer_widget.dart';
 
 class RecordPage extends StatefulWidget {
   const RecordPage({super.key});
@@ -54,7 +55,41 @@ class _RecordPageState extends State<RecordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('급발진 기록')),
+      appBar: AppBar(
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu, color: Colors.grey),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
+        ),
+        title: Text(
+          '급발진 상황 기록',
+          style: TextStyle(
+              fontSize: _getAdaptiveFontSize(context, 28),
+              fontFamily: 'head',
+              color: Color(0xFF818585)
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          Icon(Icons.notifications, color: Colors.grey),
+        ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(2),
+          child: Container(
+            height: 7,
+            color: Color(0xFF8CD8B4),
+          ),
+        ),
+      ),
+      drawer: DrawerWidget(
+        name: name,
+        getAdaptiveFontSize: _getAdaptiveFontSize,
+      ),
       body: ListView.builder(
         itemCount: suaRecords.length,
         itemBuilder: (context, index) {
@@ -63,25 +98,55 @@ class _RecordPageState extends State<RecordPage> {
           final startTime = record['suaonTime'] ?? [0, 0, 0, 0, 0, 0];
           final endTime = record['suaoffTime'] ?? [0, 0, 0, 0, 0, 0];
 
-          return ListTile(
-            title: Text(
-              '${startTime[0]}.${startTime[1].toString().padLeft(2, '0')}.${startTime[2].toString().padLeft(2, '0')}',
-            ),
-            subtitle: Text(
-              '${formatTime(startTime)} ~ ${formatTime(endTime)}',
-            ),
-            trailing: const Icon(Icons.arrow_forward),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SUADetailPage(suaid: suaid.toString()),
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+            child: Card(
+              color: Colors.white,
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0), // 카드 내부 패딩 추가
+                child: ListTile(
+                  title: Text(
+                    '${startTime[0]}.${startTime[1].toString().padLeft(2, '0')}.${startTime[2].toString().padLeft(2, '0')}',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    '${formatTime(startTime)} ~ ${formatTime(endTime)}',
+                  ),
+                  trailing: const Text(
+                    '>',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SUADetailPage(suaid: suaid.toString()),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
+              ),
+            ),
           );
         },
       ),
     );
+  }
+
+  double _getAdaptiveFontSize(BuildContext context, double size) {
+    final screenSize = MediaQuery.of(context).size;
+    final aspectRatio = screenSize.width / screenSize.height;
+    const baseAspectRatio = 375.0 / 667.0;
+    return size *
+        (aspectRatio / baseAspectRatio) *
+        MediaQuery.of(context).textScaleFactor;
   }
 }

@@ -199,6 +199,11 @@ class _BluetoothPageState extends State<BluetoothPage> {
       Duration interval = now.difference(lastReceivedTime);
       lastReceivedTime = now;
 
+      // 'ping' 메시지 필터링
+      if (bluetoothData == 'ping') {
+        return; // 'ping' 메시지는 무시
+      }
+
       // 콘솔에 출력
       print("Received Bluetooth Data: $bluetoothData at ${now.toIso8601String()}");
       print("Interval since last data: ${interval.inMilliseconds} ms");
