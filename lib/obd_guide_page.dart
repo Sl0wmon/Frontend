@@ -6,6 +6,7 @@ import 'car_provider.dart';
 import 'user_provider.dart';
 import 'drawer_widget.dart';
 import 'guide_detail.dart';
+import 'notification_page.dart';
 
 class ObdGuidePage extends StatefulWidget {
   const ObdGuidePage({super.key});
@@ -170,7 +171,13 @@ class _ObdGuidePageState extends State<ObdGuidePage> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          Icon(Icons.notifications, color: Colors.grey),
+          IconButton(
+            icon: Icon(Icons.notifications, color: Colors.grey),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage()));
+            },
+          ),
         ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(2),

@@ -184,104 +184,6 @@ class _NotificationPageState extends State<NotificationPage> {
     );
   }
 
-
-
-
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Color(0xFF8CD8B4),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '사이드 메뉴',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: _getAdaptiveFontSize(context, 24),
-                    fontFamily: 'head',
-                  ),
-                ),
-                SizedBox(height: 40), // 사이드 메뉴와 이름 간격 조정
-                Row(
-                  children: [
-                    // 프로필 이미지 위치
-                    Container(
-                      width: 35,
-                      height: 35,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: AssetImage('assets/images/profile.png'), // 이미지 경로 지정
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10), // 이미지와 텍스트 간격 조정
-                    Expanded(
-                      child: Text(
-                        '$userId', // 이름 텍스트 표시
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: _getAdaptiveFontSize(context, 18),
-                            fontFamily: 'body',
-                            fontWeight: FontWeight.bold
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                            context, MaterialPageRoute(builder: (context) => MyPage())
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          _buildDrawerItem(context, "대시보드", Icons.dashboard, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => DashboardPage())
-            );
-          }),
-          _buildDrawerItem(context, "급발진 상황 기록", Icons.history, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => RecordPage()));
-          }),
-          _buildDrawerItem(context, "차량 부품 교체 주기", Icons.car_repair, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => ReplacementCyclePage()));
-          }),
-          _buildDrawerItem(context, "OBD 진단 가이드", Icons.info, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => ObdGuidePage()));
-          }),
-          _buildDrawerItem(context, "알림", Icons.notifications, () {
-            Navigator.pop(context);
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => NotificationPage()));
-          }),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -306,7 +208,13 @@ class _NotificationPageState extends State<NotificationPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          Icon(Icons.notifications, color: Colors.grey),
+          IconButton(
+            icon: Icon(Icons.notifications, color: Colors.grey),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage()));
+            },
+          ),
         ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(2),
