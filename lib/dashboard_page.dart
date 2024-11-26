@@ -171,7 +171,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                       _buildCardSingleLine(
                         'RPM',
-                        '${data["RPM"] ?? "0.0"} rpm',
+                        '${(double.tryParse(data["RPM"] ?? "0.0") ?? 0.0).toStringAsFixed(0)} rpm',
                         cardWidth,
                         cardHeight,
                         isLargeFont: true,
@@ -197,12 +197,11 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                       _buildCardSingleLine(
                         '엔진 부하',
-                        '${data["EngineLoad"] ?? "0.0"} %',
+                        '${(double.tryParse(data["EngineLoad"] ?? "0.0") ?? 0.0).toStringAsFixed(4)} %',
                         cardWidth,
                         cardHeight,
                         isLargeFont: true,
-                        valueData: double.tryParse(data["EngineLoad"] ??
-                            "0.0") ?? 0.0,
+                        valueData: double.tryParse(data["EngineLoad"] ?? "0.0") ?? 0.0,
                       ),
                       _buildCardSingleLine(
                         '흡기 압력',
