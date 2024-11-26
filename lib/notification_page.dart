@@ -19,18 +19,25 @@ class NotificationPage extends StatefulWidget {
 class _NotificationPageState extends State<NotificationPage> {
   String name = "";
   String userId = "";
-  List<dynamic> notifications = [];
+  List<Map<String, dynamic>> notifications = [];
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
     final user = Provider.of<UserProvider>(context, listen: false);
+
     setState(() {
-      name = user.name?.isNotEmpty == true ? utf8.decode(user.name!.runes.toList()) : '';
       userId = user.userId ?? "";
+      name = user.name?.isNotEmpty == true
+          ? utf8.decode(user.name!.runes.toList())
+          : '';
     });
+
+    fetchNotifications(); // 알림 데이터 가져오기
   }
+
+
 
 
   Future<void> deleteAllNotifications() async {
@@ -61,24 +68,35 @@ class _NotificationPageState extends State<NotificationPage> {
 
   Future<void> fetchNotifications() async {
     try {
-      final response = await HttpService().postRequest("notification/view", {"userId": userId});
+      final response = await HttpService().postRequest(
+        "notification/view",
+        {"userId": userId},
+      );
 
       if (response.statusCode == 200) {
         var jsonData = json.decode(utf8.decode(response.bodyBytes));
 
         if (jsonData['success'] == "true" && jsonData['data'] != null) {
           setState(() {
-            // 데이터를 변환하여 처리
-            notifications = jsonData['data'].map((notification) {
-              List<dynamic> time = notification['notificationTime'];
-              String formattedTime = DateTime(
-                time[0],
-                time[1],
-                time[2],
-                time.length > 3 ? time[3] : 0,
-                time.length > 4 ? time[4] : 0,
-              ).toString(); // 시간 데이터를 문자열로 포맷
-              notification['notificationTime'] = formattedTime;
+            notifications = (jsonData['data'] as List).map((item) {
+              final notification = item as Map<String, dynamic>;
+
+              // notificationTime 배열을 DateTime으로 변환
+              if (notification['notificationTime'] != null &&
+                  notification['notificationTime'] is List &&
+                  notification['notificationTime'].length == 5) {
+                final timeArray = notification['notificationTime'] as List<dynamic>;
+                notification['notificationTime'] = DateTime(
+                  timeArray[0],
+                  timeArray[1],
+                  timeArray[2],
+                  timeArray[3],
+                  timeArray[4],
+                ).toString(); // DateTime을 문자열로 변환
+              } else {
+                notification['notificationTime'] = "날짜 정보 없음";
+              }
+
               return notification;
             }).toList();
           });
@@ -92,6 +110,12 @@ class _NotificationPageState extends State<NotificationPage> {
       print('Error fetching notifications: $e');
     }
   }
+
+
+
+
+
+
 
   Widget _buildDrawerItem(
       BuildContext context, String title, IconData icon, VoidCallback onTap) {
@@ -125,37 +149,42 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   Widget _buildNotificationItem(Map<String, dynamic> notification) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          notification['title'] ?? '제목 없음',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: 4),
-        Text(
-          notification['content'] ?? '내용 없음',
-          style: TextStyle(fontSize: 16, color: Color(0xFF565656)),
-        ),
-        if (notification['code'] != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            notification['title'] ?? '제목 없음',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            notification['content'] ?? '내용 없음',
+            style: const TextStyle(fontSize: 16, color: Color(0xFF565656)),
+          ),
+          if (notification['code'] != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                '진단가이드에서 ${notification['code']}를 확인해주세요!',
+                style: const TextStyle(fontSize: 14, color: Colors.blue),
+              ),
+            ),
+          Align(
+            alignment: Alignment.bottomRight,
             child: Text(
-              '진단가이드에서 ${notification['code']}를 확인해주세요!',
-              style: TextStyle(fontSize: 14, color: Colors.blue),
+              notification['notificationTime'] ?? '날짜 없음',
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
           ),
-        Align(
-          alignment: Alignment.bottomRight,
-          child: Text(
-            notification['notificationTime'] ?? '날짜 없음',
-            style: TextStyle(fontSize: 14, color: Colors.grey),
-          ),
-        ),
-        Divider(color: Colors.grey), // 회색 경계선
-      ],
+          const Divider(color: Colors.grey),
+        ],
+      ),
     );
   }
+
+
 
 
   Widget _buildDrawer(BuildContext context) {
@@ -196,7 +225,7 @@ class _NotificationPageState extends State<NotificationPage> {
                     SizedBox(width: 10), // 이미지와 텍스트 간격 조정
                     Expanded(
                       child: Text(
-                        '$name님', // 이름 텍스트 표시
+                        '$userId', // 이름 텍스트 표시
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: _getAdaptiveFontSize(context, 18),
