@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class HttpService {
-  final String _baseUrl = "http://172.18.224.1:8080/api";
+  final String _baseUrl = "http://172.30.104.185:8080/api";
 
   String get baseUrl => _baseUrl;
 

@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.slomon"
-    compileSdk = flutter.compileSdkVersion
+    compileSdkVersion 34
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -30,7 +30,7 @@ android {
         versionName = flutter.versionName
         //bluetooth
         minSdkVersion 23
-        targetSdkVersion 33
+        targetSdkVersion 34
     }
 
     buildTypes {
