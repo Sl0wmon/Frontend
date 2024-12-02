@@ -52,7 +52,7 @@ class _BluetoothPageState extends State<BluetoothPage> {
       });
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<Suaprovider>(context, listen: false).updateData({
+      Provider.of<SuaProvider>(context, listen: false).updateData({
         "timeStamp":"2024-11-26T09:03:24",
         "SUA":"false",
         "Speed": "0.0",
@@ -213,11 +213,11 @@ class _BluetoothPageState extends State<BluetoothPage> {
 
       // 유효한 데이터만 업데이트
       Provider.of<DataProvider>(context, listen: false).updateData(parsedData);
-      Provider.of<Suaprovider>(context, listen: false).updateData(parsedData);
+      Provider.of<SuaProvider>(context, listen: false).setData(parsedData);
 
       // 디버깅 로그
       print("Parsed Data: $parsedData");
-      print("SUAProvider Data: ${Provider.of<Suaprovider>(context, listen: false).data}");
+      print("SUAProvider Data: ${Provider.of<SuaProvider>(context, listen: false).data}");
     }, onError: (error) {
       print("Error while receiving data: $error");
       handleConnectionLost();

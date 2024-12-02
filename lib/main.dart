@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:slomon/addCarInfo_page.dart';
-import 'package:slomon/myPage.dart';
-import 'package:slomon/notification_page.dart';
-import 'package:slomon/registerReplacePage.dart';
-import 'package:slomon/replacementCycle.dart';
+import 'addCarInfo_page.dart';
+import 'myPage.dart';
+import 'notification_page.dart';
+import 'registerReplacePage.dart';
+import 'replacementCycle.dart';
 import 'DataProvider.dart';
 import 'SUAProvider.dart';
 import 'record_page.dart';
@@ -21,7 +21,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => DataProvider()), // DataProvider 등록
         ChangeNotifierProvider(create: (_) => UserProvider()), // UserProvider 등록
         ChangeNotifierProvider(create: (_) => CarProvider()),  // CarProvider 등록
-        ChangeNotifierProvider(create: (_) => Suaprovider()),
+        ChangeNotifierProvider(create: (_) => SuaProvider()),
       ],
       child: const MyApp(),
     ),
