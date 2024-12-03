@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:slomon/sua_record_add.dart';
 import 'obd_guide_page.dart';
 import 'myPage.dart';
 import 'dashboard_page.dart';
@@ -107,7 +108,7 @@ class DrawerWidget extends StatelessWidget {
             Navigator.pop(context);
             Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ObdGuidePage()),
+                MaterialPageRoute(builder: (context) => SuaRecordAdd()),
             );
           }),
           _buildDrawerItem(context, "알림", Icons.notifications, () {

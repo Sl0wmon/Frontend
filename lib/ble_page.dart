@@ -213,7 +213,7 @@ class _BluetoothPageState extends State<BluetoothPage> {
 
       // 유효한 데이터만 업데이트
       Provider.of<DataProvider>(context, listen: false).updateData(parsedData);
-      Provider.of<SuaProvider>(context, listen: false).setData(parsedData);
+      Provider.of<SuaProvider>(context, listen: false).updateData(parsedData);
 
       // 디버깅 로그
       print("Parsed Data: $parsedData");

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:slomon/http_service.dart';
+import 'http_service.dart';
 import 'dart:convert';
 import 'notification_page.dart';
 
@@ -55,26 +55,33 @@ class _SUADetailPageState extends State<SUADetailPage> {
   double calculateTotalDistance() {
     double distance = 0.0;
     for (int i = 1; i < suaDetails.length; i++) {
-      final speed1 = suaDetails[i - 1]['speed'] as double; // km/h
-      final speed2 = suaDetails[i]['speed'] as double; // km/h
-      final timestamp1 = suaDetails[i - 1]['timestamp'] as List<dynamic>;
-      final timestamp2 = suaDetails[i]['timestamp'] as List<dynamic>;
+      final timestamps1 = suaDetails[i - 1]['timestamp'] as List<dynamic>;
+      final timestamps2 = suaDetails[i]['timestamp'] as List<dynamic>;
 
       // Convert timestamps to DateTime
       final time1 = DateTime(
-        timestamp1[0], timestamp1[1], timestamp1[2], timestamp1[3], timestamp1[4], timestamp1[5],
+        timestamps1[0], timestamps1[1], timestamps1[2], timestamps1[3], timestamps1[4], timestamps1[5],
       );
       final time2 = DateTime(
-        timestamp2[0], timestamp2[1], timestamp2[2], timestamp2[3], timestamp2[4], timestamp2[5],
+        timestamps2[0], timestamps2[1], timestamps2[2], timestamps2[3], timestamps2[4], timestamps2[5],
       );
 
       final timeDiff = time2.difference(time1).inSeconds / 3600.0; // 시간 단위로 변환
-      final averageSpeed = (speed1 + speed2) / 2.0; // 평균 속도
+
+      // 평균 속도 계산 (여러 속도 값의 평균)
+      final speeds = List<double>.from(suaDetails[i - 1]['speed']); // 여러 속도 값을 리스트로 변환
+      final speeds2 = List<double>.from(suaDetails[i]['speed']); // 두 번째 지점에서의 속도 값
+
+      final totalSpeed = speeds.fold(0.0, (sum, speed) => sum + speed) +
+          speeds2.fold(0.0, (sum, speed) => sum + speed);
+
+      final averageSpeed = totalSpeed / (speeds.length + speeds2.length);
 
       distance += averageSpeed * timeDiff; // 이동 거리 (km)
     }
     return distance;
   }
+
 
   @override
   Widget build(BuildContext context) {

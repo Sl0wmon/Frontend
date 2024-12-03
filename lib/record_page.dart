@@ -128,12 +128,6 @@ class _RecordPageState extends State<RecordPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '주행 거리: ${mileage.toStringAsFixed(1)} km', // 주행 거리 표시
-                        style: TextStyle(
-                          fontFamily: 'body',
-                        ),
-                      ),
-                      Text(
                         '${formatTime(startTime)} ~ ${formatTime(endTime)}', // 시간 표시
                         style: TextStyle(
                           fontFamily: 'body',
