@@ -48,7 +48,7 @@ class _SUADetailPageState extends State<SUADetailPage> {
         });
       }
     } else {
-      print('Failed to load SUA detail');
+      print('SUA 기록 로드 실패');
     }
   }
 
@@ -68,20 +68,15 @@ class _SUADetailPageState extends State<SUADetailPage> {
 
       final timeDiff = time2.difference(time1).inSeconds / 3600.0; // 시간 단위로 변환
 
-      // 평균 속도 계산 (여러 속도 값의 평균)
-      final speeds = List<double>.from(suaDetails[i - 1]['speed']); // 여러 속도 값을 리스트로 변환
-      final speeds2 = List<double>.from(suaDetails[i]['speed']); // 두 번째 지점에서의 속도 값
+      final speed1 = suaDetails[i - 1]['speed'] as double; // 단일 double 값
+      final speed2 = suaDetails[i]['speed'] as double; // 단일 double 값
 
-      final totalSpeed = speeds.fold(0.0, (sum, speed) => sum + speed) +
-          speeds2.fold(0.0, (sum, speed) => sum + speed);
-
-      final averageSpeed = totalSpeed / (speeds.length + speeds2.length);
+      final averageSpeed = (speed1 + speed2) / 2; // 두 속도의 평균
 
       distance += averageSpeed * timeDiff; // 이동 거리 (km)
     }
     return distance;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -164,8 +159,8 @@ class _SUADetailPageState extends State<SUADetailPage> {
               style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                color: Colors.grey,
-                fontFamily: 'head'
+                  color: Colors.grey,
+                  fontFamily: 'head'
               ),
             ),
             const SizedBox(height: 15),  // SUAId와 아래 항목 사이 공백 줄임
@@ -173,8 +168,8 @@ class _SUADetailPageState extends State<SUADetailPage> {
                 '속도',
                 style: TextStyle(
                     fontSize: 24,
-                  fontFamily: 'head',
-                  color: Colors.black
+                    fontFamily: 'head',
+                    color: Colors.black
                 )
             ),
             const SizedBox(height: 10),
@@ -201,19 +196,11 @@ class _SUADetailPageState extends State<SUADetailPage> {
             ),
             const SizedBox(height: 10),
             Text(
-              '총 주행 거리: ${totalDistance.toStringAsFixed(2)} km',
-              style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                fontFamily: 'body'
-              ),
-            ),
-            Text(
               '평균 속도: ${averageSpeed.toStringAsFixed(2)} km/h',
               style: const TextStyle(
                   fontSize: 16,
                   color: Colors.grey,
-                fontFamily: 'body'
+                  fontFamily: 'body'
               ),
             ),
             const SizedBox(height: 20),
@@ -221,8 +208,8 @@ class _SUADetailPageState extends State<SUADetailPage> {
                 '페달 기록',
                 style: TextStyle(
                     fontSize: 24,
-                  fontFamily: 'head',
-                  color: Colors.black
+                    fontFamily: 'head',
+                    color: Colors.black
                 )
             ),
             const SizedBox(height: 10),
@@ -256,7 +243,7 @@ class _SUADetailPageState extends State<SUADetailPage> {
               style: const TextStyle(
                   fontSize: 12,
                   color: Colors.grey,
-                fontFamily: 'body'
+                  fontFamily: 'body'
               ),
             ),
           ],
@@ -325,6 +312,7 @@ class LineGraphPainter extends CustomPainter {
       axisPaint,
     );
 
+    // Y축 값의 마커를 표시
     const markerCount = 5;
     final markerStep = maxY / markerCount;
     for (int i = 0; i <= markerCount; i++) {
@@ -360,15 +348,13 @@ class LineGraphPainter extends CustomPainter {
 }
 
 class PedalGraphPainter extends CustomPainter {
-  final List<double> accData;
-  final List<double> brakeData;
+  final List<double> accPressureData;
+  final List<double> brakePressureData;
 
-  PedalGraphPainter(this.accData, this.brakeData);
+  PedalGraphPainter(this.accPressureData, this.brakePressureData);
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (accData.isEmpty || brakeData.isEmpty) return;
-
     const double padding = 16.0;
     final usableWidth = size.width - padding * 2;
     final usableHeight = size.height - padding * 2;
@@ -383,29 +369,29 @@ class PedalGraphPainter extends CustomPainter {
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
 
-    final accPath = Path();
-    final brakePath = Path();
+    final pathAcc = Path();
+    final pathBrake = Path();
 
-    final xStep = usableWidth / (accData.length - 1);
-    final maxY = 1000.0; // 압력 최대값
+    final xStep = usableWidth / (accPressureData.length - 1);
+    final maxY = ([
+      accPressureData.reduce((a, b) => a > b ? a : b),
+      brakePressureData.reduce((a, b) => a > b ? a : b)
+    ].reduce((a, b) => a > b ? a : b) * 1.1);
+
     final yScale = usableHeight / maxY;
 
-    accPath.moveTo(padding, size.height - padding - accData[0] * yScale);
-    for (int i = 1; i < accData.length; i++) {
+    pathAcc.moveTo(padding, size.height - padding - accPressureData[0] * yScale);
+    pathBrake.moveTo(padding, size.height - padding - brakePressureData[0] * yScale);
+    for (int i = 1; i < accPressureData.length; i++) {
       final x = padding + i * xStep;
-      final y = size.height - padding - accData[i] * yScale;
-      accPath.lineTo(x, y);
+      final yAcc = size.height - padding - accPressureData[i] * yScale;
+      final yBrake = size.height - padding - brakePressureData[i] * yScale;
+      pathAcc.lineTo(x, yAcc);
+      pathBrake.lineTo(x, yBrake);
     }
 
-    brakePath.moveTo(padding, size.height - padding - brakeData[0] * yScale);
-    for (int i = 1; i < brakeData.length; i++) {
-      final x = padding + i * xStep;
-      final y = size.height - padding - brakeData[i] * yScale;
-      brakePath.lineTo(x, y);
-    }
-
-    canvas.drawPath(accPath, accPaint);
-    canvas.drawPath(brakePath, brakePaint);
+    canvas.drawPath(pathAcc, accPaint);
+    canvas.drawPath(pathBrake, brakePaint);
 
     final axisPaint = Paint()
       ..color = Colors.grey
