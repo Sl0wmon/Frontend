@@ -21,7 +21,7 @@ class _BluetoothPageState extends State<BluetoothPage> {
 
 
   List<BluetoothDevice> devices = [];
-  bool isLoading = false;
+  bool isLoading = true;
   BluetoothConnection? connection;
 
   @override
@@ -34,6 +34,17 @@ class _BluetoothPageState extends State<BluetoothPage> {
       name = user.name != null
           ? utf8.decode(user.name!.codeUnits)
           : ""; // UTF-8 디코딩 적용
+    });
+
+    // 4초 후 자동으로 다른 페이지로 이동
+    Future.delayed(const Duration(seconds: 4), () {
+      if (!mounted) return;
+
+      // 블루투스 연결 여부와 상관없이 다른 페이지로 이동
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => DashboardPage()),
+      );
     });
 
     discoverDevices();
@@ -341,39 +352,54 @@ class _BluetoothPageState extends State<BluetoothPage> {
         MediaQuery.of(context).textScaleFactor;
   }
 
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Text(
-          'slowmon',
-          style: TextStyle(
-            color: Color(0xFF61D99E),
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Arial',
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // 로딩 아이콘
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF61D99E)), // 로딩 아이콘 색상 설정
+            ),
+            const SizedBox(height: 16), // 로딩 아이콘과 텍스트 간격
+            // slowmon 텍스트
+            Text(
+              'slowmon',
+              style: const TextStyle(
+                color: Color(0xFF61D99E),
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Arial',
+              ),
+            ),
+            const SizedBox(height: 8), // slowmon 텍스트와 연결 텍스트 간격
+            // 장치 연결 중입니다. 텍스트
+            Text(
+              '장치 연결 중입니다.',
+              style: const TextStyle(
+                color: Colors.grey,
+                fontSize: 16,
+                fontFamily: 'Arial',
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-// class AnotherPage extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: Center(
-//         child: Text(
-//           'slowmon',
-//           style: TextStyle(
-//             color: Color(0x57AF86FF), // 텍스트 색상을 빨간색으로 설정
-//             fontSize: 32, // 필요에 따라 글꼴 크기 조정
-//             fontWeight: FontWeight.bold, // 필요 시 글꼴 두께 설정
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
+class AnotherPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Another Page'),
+      ),
+      body: Center(
+        child: Text('This is another page!'),
+      ),
+    );
+  }
+}

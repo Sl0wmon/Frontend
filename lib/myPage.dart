@@ -398,7 +398,7 @@ class _MyPageState extends State<MyPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // 새로 추가된 박스
+// 새로 추가된 박스
                     Container(
                       padding: const EdgeInsets.all(16.0),
                       width: double.infinity, // 너비를 전체로 설정
@@ -459,8 +459,20 @@ class _MyPageState extends State<MyPage> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          // 연두색 박스 제거
                         ],
+                      ),
+                    ),
+// 새로운 문구 추가
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: Text(
+                        "대시보드 값이 모두 0일 경우 등록 버튼을 눌러 장치와 연결해주세요.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey, // 문구를 회색으로 설정
+                          fontFamily: 'body',
+                        ),
                       ),
                     ),
                   ],
