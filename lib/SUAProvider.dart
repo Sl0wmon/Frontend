@@ -10,6 +10,7 @@ class SuaProvider extends ChangeNotifier {
   double IntakeTemp = 0;
   double EngineLoad = 0;
   double IntakePressure = 0;
+  double TrottlePosition = 0;
 
   Map<String, int> PressureValues = {
     "acc": 0,
@@ -29,6 +30,7 @@ class SuaProvider extends ChangeNotifier {
       "acc": "0",
       "brk": "0",
     },
+    "throttlePosition" : "0.0",
   };
 
   Map<String, dynamic> get data => _data;
@@ -49,6 +51,7 @@ class SuaProvider extends ChangeNotifier {
     IntakePressure = SUAData['IntakePressure'] ?? "";
     PressureValues['acc'] = SUAData['PressureValues']['acc'] ?? 0;
     PressureValues['brk'] = SUAData['PressureValues']['brk'] ?? 0;
+    TrottlePosition = SUAData['Throttle Pos'] ?? "";
 
     notifyListeners();
   }

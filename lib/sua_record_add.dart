@@ -100,7 +100,8 @@ class _SuaRecordAddState extends State<SuaRecordAdd> {
         "coolantTemperature": data['CoolantTemp'],
         "intakeTemperature": data['IntakeTemp'],
         "intakePressure": data['IntakePressure'],
-        "engineLoad": data['EngineLoad']
+        "engineLoad": data['EngineLoad'],
+        "throttlePosition": data['Throttle Pos']
       });
 
       if (response.statusCode == 200) {

@@ -292,6 +292,7 @@ class _BluetoothPageState extends State<BluetoothPage> {
         "acc": "0",
         "brk": "0",
       },
+      "throttlePosition": "0.0",
     };
 
     // 쉼표로 데이터 분리
@@ -329,6 +330,8 @@ class _BluetoothPageState extends State<BluetoothPage> {
           parsedData["IntakeTemp"] = value;
         } else if (key == "Engine Load") {
           parsedData["EngineLoad"] = value;
+        } else if (key == "Throttle Pos") {
+          parsedData["throttlePosition"] = value;
         }
       }
     }
