@@ -1,15 +1,13 @@
-import 'package:flutter/material.dart';
-import 'http_service.dart';
 import 'dart:convert';
-import 'notification_page.dart';
+import 'package:flutter/material.dart';
+import 'http_service.dart'; // HttpService 파일 경로ㅅ
 
 class SUADetailPage extends StatefulWidget {
   final String suaid;
-
-  const SUADetailPage({super.key, required this.suaid});
+  const SUADetailPage({Key? key, required this.suaid}) : super(key: key);
 
   @override
-  State<SUADetailPage> createState() => _SUADetailPageState();
+  _SUADetailPageState createState() => _SUADetailPageState();
 }
 
 class _SUADetailPageState extends State<SUADetailPage> {
@@ -17,6 +15,7 @@ class _SUADetailPageState extends State<SUADetailPage> {
   List<double> speedData = [];
   List<double> accPressureData = [];
   List<double> brakePressureData = [];
+  List<double> rpmData = [];  // RPM 데이터 리스트
   double totalDistance = 0.0;
 
   @override
@@ -42,6 +41,7 @@ class _SUADetailPageState extends State<SUADetailPage> {
           speedData = suaDetails.map((entry) => entry['speed'] as double).toList();
           accPressureData = suaDetails.map((entry) => entry['accPressure'] as double).toList();
           brakePressureData = suaDetails.map((entry) => entry['brakePressure'] as double).toList();
+          rpmData = suaDetails.map((entry) => entry['rpm'] as double).toList();  // RPM 데이터 추출
 
           // Calculate total distance
           totalDistance = calculateTotalDistance();
@@ -55,25 +55,14 @@ class _SUADetailPageState extends State<SUADetailPage> {
   double calculateTotalDistance() {
     double distance = 0.0;
     for (int i = 1; i < suaDetails.length; i++) {
-      final timestamps1 = suaDetails[i - 1]['timestamp'] as List<dynamic>;
-      final timestamps2 = suaDetails[i]['timestamp'] as List<dynamic>;
-
-      // Convert timestamps to DateTime
-      final time1 = DateTime(
-        timestamps1[0], timestamps1[1], timestamps1[2], timestamps1[3], timestamps1[4], timestamps1[5],
-      );
-      final time2 = DateTime(
-        timestamps2[0], timestamps2[1], timestamps2[2], timestamps2[3], timestamps2[4], timestamps2[5],
-      );
-
-      final timeDiff = time2.difference(time1).inSeconds / 3600.0; // 시간 단위로 변환
-
-      final speed1 = suaDetails[i - 1]['speed'] as double; // 단일 double 값
-      final speed2 = suaDetails[i]['speed'] as double; // 단일 double 값
-
-      final averageSpeed = (speed1 + speed2) / 2; // 두 속도의 평균
-
-      distance += averageSpeed * timeDiff; // 이동 거리 (km)
+      final current = suaDetails[i];
+      final previous = suaDetails[i - 1];
+      final speedCurrent = current['speed'] as double;
+      final speedPrevious = previous['speed'] as double;
+      final timeDiff = (current['timestamp'][3] - previous['timestamp'][3]) * 3600 +
+          (current['timestamp'][4] - previous['timestamp'][4]) * 60 +
+          (current['timestamp'][5] - previous['timestamp'][5]);
+      distance += (speedCurrent + speedPrevious) / 2 * (timeDiff / 3600); // 평균 속도로 거리 계산
     }
     return distance;
   }
@@ -82,32 +71,7 @@ class _SUADetailPageState extends State<SUADetailPage> {
   Widget build(BuildContext context) {
     if (suaDetails.isEmpty) {
       return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            '급발진 상세 기록',
-            style: TextStyle(
-                fontSize: _getAdaptiveFontSize(context, 28),
-                fontFamily: 'head',
-                color: Color(0xFF818585)
-            ),
-          ),
-          centerTitle: true,
-          backgroundColor: Colors.white,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.grey),
-            onPressed: () => Navigator.pop(context),
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.notifications, color: Colors.grey),
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage()));
-              },
-            ),
-          ],
-        ),
+        appBar: AppBar(title: const Text('SUA 상세 정보')),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -115,62 +79,15 @@ class _SUADetailPageState extends State<SUADetailPage> {
     final averageSpeed = speedData.reduce((a, b) => a + b) / speedData.length;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          '급발진 상세 기록',
-          style: TextStyle(
-              fontSize: _getAdaptiveFontSize(context, 28),
-              fontFamily: 'head',
-              color: Color(0xFF818585)
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.grey),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.notifications, color: Colors.grey),
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage()));
-            },
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(2),
-          child: Container(
-            height: 7,
-            color: Color(0xFF8CD8B4),
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(  // 세로로 스크롤 가능하도록 설정
+      appBar: AppBar(title: const Text('SUA 상세 정보')),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 5),  // 상단 공백을 줄임
-            Text(
-              'SUA ID: ${widget.suaid}',  // SUAId를 상단에 표시
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
-                  fontFamily: 'head'
-              ),
-            ),
-            const SizedBox(height: 15),  // SUAId와 아래 항목 사이 공백 줄임
             const Text(
-                '속도',
-                style: TextStyle(
-                    fontSize: 24,
-                    fontFamily: 'head',
-                    color: Colors.black
-                )
+              '속도',
+              style: TextStyle(fontSize: 24, fontFamily: 'head', color: Colors.black),
             ),
             const SizedBox(height: 10),
             Container(
@@ -197,20 +114,13 @@ class _SUADetailPageState extends State<SUADetailPage> {
             const SizedBox(height: 10),
             Text(
               '평균 속도: ${averageSpeed.toStringAsFixed(2)} km/h',
-              style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                  fontFamily: 'body'
-              ),
+              style: const TextStyle(fontSize: 16, color: Colors.grey, fontFamily: 'body'),
             ),
             const SizedBox(height: 20),
+
             const Text(
-                '페달 기록',
-                style: TextStyle(
-                    fontSize: 24,
-                    fontFamily: 'head',
-                    color: Colors.black
-                )
+              '페달 기록',
+              style: TextStyle(fontSize: 24, fontFamily: 'head', color: Colors.black),
             ),
             const SizedBox(height: 10),
             Container(
@@ -240,25 +150,41 @@ class _SUADetailPageState extends State<SUADetailPage> {
             const SizedBox(height: 10),
             Text(
               '가속 페달 (빨간색) | 브레이크 페달 (초록색)',
-              style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                  fontFamily: 'body'
+              style: const TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'body'),
+            ),
+
+            // RPM 그래프 섹션 추가
+            const SizedBox(height: 20),
+            const Text(
+              'RPM',
+              style: TextStyle(fontSize: 24, fontFamily: 'head', color: Colors.black),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.5),
+                    blurRadius: 5,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(16.0),
+              child: SizedBox(
+                height: 200,
+                child: CustomPaint(
+                  painter: RPMGraphPainter(rpmData),
+                  child: Container(),
+                ),
               ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  double _getAdaptiveFontSize(BuildContext context, double size) {
-    final screenSize = MediaQuery.of(context).size;
-    final aspectRatio = screenSize.width / screenSize.height;
-    const baseAspectRatio = 375.0 / 667.0;
-    return size *
-        (aspectRatio / baseAspectRatio) *
-        MediaQuery.of(context).textScaleFactor;
   }
 }
 
@@ -441,4 +367,90 @@ class PedalGraphPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class RPMGraphPainter extends CustomPainter {
+  final List<double> rpmData;
+
+  RPMGraphPainter(this.rpmData);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (rpmData.isEmpty) return;
+
+    const double padding = 16.0;
+    final usableWidth = size.width - padding * 2;
+    final usableHeight = size.height - padding * 2;
+
+    final paint = Paint()
+      ..color = Colors.blue
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke;
+
+    final path = Path();
+    final xStep = usableWidth / (rpmData.length - 1);
+    final maxY = (rpmData.reduce((a, b) => a > b ? a : b) * 1.1);
+    final yScale = usableHeight / maxY;
+
+    path.moveTo(padding, size.height - padding - rpmData[0] * yScale);
+    for (int i = 1; i < rpmData.length; i++) {
+      final x = padding + i * xStep;
+      final y = size.height - padding - rpmData[i] * yScale;
+      path.lineTo(x, y);
+    }
+    canvas.drawPath(path, paint);
+
+    final axisPaint = Paint()
+      ..color = Colors.grey
+      ..strokeWidth = 1;
+
+    // Y축
+    canvas.drawLine(
+      Offset(padding, padding),
+      Offset(padding, size.height - padding),
+      axisPaint,
+    );
+
+    // X축
+    canvas.drawLine(
+      Offset(padding, size.height - padding),
+      Offset(size.width - padding, size.height - padding),
+      axisPaint,
+    );
+
+    // Y축 값의 마커를 표시
+    const markerCount = 5;
+    final markerStep = maxY / markerCount;
+    for (int i = 0; i <= markerCount; i++) {
+      final yValue = markerStep * i;
+      final yOffset = size.height - padding - (yValue * yScale);
+
+      final markerTextPainter = TextPainter(
+        text: TextSpan(
+          text: yValue.toStringAsFixed(0),
+          style: const TextStyle(color: Colors.grey, fontSize: 10),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      markerTextPainter.layout();
+
+      markerTextPainter.paint(
+        canvas,
+        Offset(padding - markerTextPainter.width - 5, yOffset - markerTextPainter.height / 2),
+      );
+
+      canvas.drawLine(
+        Offset(padding, yOffset),
+        Offset(size.width - padding, yOffset),
+        Paint()
+          ..color = Colors.grey.withOpacity(0.5)
+          ..strokeWidth = 0.5,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
 }
