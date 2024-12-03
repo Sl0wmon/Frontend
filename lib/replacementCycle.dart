@@ -43,34 +43,7 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
     {'title': '타이밍', 'remainingDistance': '150.60km', 'lastReplacement': '2024-12-20', 'widthFactor': 0.9},
   ];
 
-  Future<void> addNotification(String? userId, String? title) async {
-    if (userId == null || title == null) {
-      print("알림 추가 실패: userId 또는 title이 null입니다.");
-      return;
-    }
-    try {
-      final notificationData = {
-        "userId": userId,
-        "notificationTime": DateTime.now().toIso8601String().split('.').first, // 초 단위까지만 포함
-        "code": "", // null 대신 빈 문자열
-        "title": "$title의 부품 교체 주기 100% 달성!",
-        "content": "$title를 교체 해 주세요!"
-      };
 
-      print("Notification Data Request: ${json.encode(notificationData)}");
-
-      final response = await HttpService().postRequest("notification/add", notificationData);
-
-      if (response.statusCode == 201) {
-        print('Notification added successfully.');
-      } else {
-        print('Failed to add notification. Status code: ${response.statusCode}');
-        print('Response body: ${response.body}');
-      }
-    } catch (e) {
-      print('Error adding notification: $e');
-    }
-  }
 
   void checkReplacementCycles(Map<String, dynamic> consumableData) {
     const maxDistances = {
@@ -101,7 +74,6 @@ class _ReplacementCyclePageState extends State<ReplacementCyclePage> {
         hasExceededParts = true;
         String partName = _getPartNameFromKey(key);
         print("부품 초과: $partName (현재 주행 거리: ${currentMileage.toInt()}km, 최대 거리: $maxValue km)");
-        addNotification(userId, partName); // 알림 추가
       }
     });
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:slomon/ble_page.dart';
 import 'package:slomon/sua_record_add.dart';
 import 'dart:convert';
 import 'dashboard_page.dart';
@@ -100,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
                 }
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => DashboardPage()),
+                  MaterialPageRoute(builder: (context) => BluetoothPage()),
                 );
               } else {
                 _showDialog("차량 정보 조회 서버 오류가 발생했습니다.");
