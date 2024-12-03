@@ -108,7 +108,7 @@ class DrawerWidget extends StatelessWidget {
             Navigator.pop(context);
             Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SuaRecordAdd()),
+                MaterialPageRoute(builder: (context) => ObdGuidePage()),
             );
           }),
           _buildDrawerItem(context, "알림", Icons.notifications, () {
