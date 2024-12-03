@@ -21,7 +21,7 @@ class _BluetoothPageState extends State<BluetoothPage> {
 
 
   List<BluetoothDevice> devices = [];
-  bool isLoading = true;
+  bool isLoading = false;
   BluetoothConnection? connection;
 
   @override
@@ -341,93 +341,39 @@ class _BluetoothPageState extends State<BluetoothPage> {
         MediaQuery.of(context).textScaleFactor;
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.grey),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
-        ),
-        title: Text(
-          '장치 연결 중...',
+      body: Center(
+        child: Text(
+          'slowmon',
           style: TextStyle(
-              fontSize: _getAdaptiveFontSize(context, 28),
-              fontFamily: 'head',
-              color: const Color(0xFF818585)
+            color: Color(0xFF61D99E),
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Arial',
           ),
         ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: const [
-          Icon(Icons.notifications, color: Colors.grey),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(2),
-          child: Container(
-            height: 2,
-            color: const Color(0xFF8CD8B4),
-          ),
-        ),
-      ),
-      drawer: DrawerWidget(
-        name: name,
-        getAdaptiveFontSize: _getAdaptiveFontSize,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: isLoading
-                ? Center(child: CircularProgressIndicator())
-                : devices.isEmpty
-                ? Center(child: Text("No devices found"))
-                : ListView.builder(
-              itemCount: devices.length,
-              itemBuilder: (context, index) {
-                final device = devices[index];
-                return ListTile(
-                  title: Text(device.name ?? "Unknown Device"),
-                  subtitle: Text(device.address),
-                  onTap: () {
-                    connectToDevice(device);
-                  },
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => DashboardPage()),
-                );
-              },
-              child: Text("Go to Another Page"),
-            ),
-          ),
-        ],
       ),
     );
   }
 }
 
-class AnotherPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Another Page'),
-      ),
-      body: Center(
-        child: Text('This is another page!'),
-      ),
-    );
-  }
-}
+// class AnotherPage extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       body: Center(
+//         child: Text(
+//           'slowmon',
+//           style: TextStyle(
+//             color: Color(0x57AF86FF), // 텍스트 색상을 빨간색으로 설정
+//             fontSize: 32, // 필요에 따라 글꼴 크기 조정
+//             fontWeight: FontWeight.bold, // 필요 시 글꼴 두께 설정
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
